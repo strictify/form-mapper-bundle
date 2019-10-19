@@ -1,0 +1,3 @@
+imports:
+    - { resource: 'vendor/symplify/easy-coding-standard/config/set/symfony.yaml' }
+    - { resource: 'vendor/symplify/easy-coding-standard/config/set/php71.yaml' }

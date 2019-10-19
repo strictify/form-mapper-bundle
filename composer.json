@@ -1,0 +1,58 @@
+{
+    "name": "strictify/form-mapper-bundle",
+    "description": "Strictify your forms",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": [
+        "form mapper"
+    ],
+    "authors": [
+        {
+            "name": "Zeljko Mitic",
+            "email": "mitke013@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "~7.1",
+        "ext-json": "*",
+        "doctrine/annotations": "^1.2",
+        "doctrine/collections": "^1.2",
+        "sensio/framework-extra-bundle": "^5.1",
+        "symfony/dependency-injection": "^4.0",
+        "symfony/form": "^4.0",
+        "symfony/framework-bundle": "^4.0",
+        "symfony/options-resolver": "^4.0",
+        "symfony/validator": "^4.0",
+        "symfony/yaml": "^4.0",
+        "symfony/contracts": "^1.1"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-master",
+        "symfony/browser-kit": "^4.0",
+        "symfony/css-selector": "^4.0",
+        "symfony/phpunit-bridge": "^4.0",
+        "symfony/var-dumper": "^4.0",
+        "symplify/easy-coding-standard": "^6.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Strictify\\FormMapper\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Strictify\\FormMapper\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "check-style": "phpcs src tests",
+        "fix-style": "phpcbf src tests"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    },
+    "config": {
+    }
+}
