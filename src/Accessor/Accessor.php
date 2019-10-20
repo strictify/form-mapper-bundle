@@ -32,10 +32,10 @@ class Accessor implements AccessorInterface
     {
         $getter = $config['get_value'];
         $oldValue = $getter($object);
-        $isMultiple = is_iterable($oldValue);
+        $isMultiple = is_iterable($oldValue) || is_iterable($newValue);
 
         if (!$isMultiple) {
-            $this->setSingle($oldValue, $newValue, $config['update_value'], $object);
+            $this->setSingle($object, $oldValue, $newValue, $config['update_value']);
 
             return;
         }
@@ -63,12 +63,11 @@ class Accessor implements AccessorInterface
     }
 
     /**
-     * @param mixed    $oldValue
-     * @param mixed    $newValue
-     * @param callable $setter
-     * @param mixed    $object
+     * @param mixed $object
+     * @param mixed $oldValue
+     * @param mixed $newValue
      */
-    private function setSingle($oldValue, $newValue, callable $setter, $object): void
+    private function setSingle($object, $oldValue, $newValue, callable $setter): void
     {
         if ($this->isEqual($oldValue, $newValue)) {
             return;
