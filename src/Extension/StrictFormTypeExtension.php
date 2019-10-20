@@ -7,13 +7,15 @@ namespace Strictify\FormMapper\Extension;
 use Generator;
 use InvalidArgumentException;
 use Strictify\FormMapper\DataMapper\StrictFormMapper;
+use Strictify\FormMapper\Exception\FactoryException;
+use Strictify\FormMapper\Service\AccessorInterface;
 use Strictify\FormMapper\Service\CallableReaderInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
-use Symfony\Component\Form\Exception\OutOfBoundsException;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -24,11 +26,13 @@ use function sprintf;
 class StrictFormTypeExtension extends AbstractTypeExtension
 {
     private $callableReader;
+    private $accessor;
     private $translator;
 
-    public function __construct(CallableReaderInterface $callableReader, ?TranslatorInterface $translator)
+    public function __construct(CallableReaderInterface $callableReader, AccessorInterface $accessor, ?TranslatorInterface $translator)
     {
         $this->callableReader = $callableReader;
+        $this->accessor = $accessor;
         $this->translator = $translator;
     }
 
@@ -39,13 +43,13 @@ class StrictFormTypeExtension extends AbstractTypeExtension
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        if (true === $options['compound'] && null !== $options['get_value']) {
+        if (true === $options['compound']) {
             $originalMapper = $builder->getDataMapper();
             if (!$originalMapper) {
                 throw new InvalidArgumentException('Mapper not found');
             }
 
-            $builder->setDataMapper(new StrictFormMapper($originalMapper));
+            $builder->setDataMapper(new StrictFormMapper($originalMapper, $this->accessor, $this->translator));
         }
     }
 
@@ -60,6 +64,35 @@ class StrictFormTypeExtension extends AbstractTypeExtension
             'factory' => null,
             'factory_error_message' => 'Some fields are not valid, please correct them.',
         ]);
+        $resolver->setAllowedTypes('get_value', ['null', 'callable']);
+        $resolver->setAllowedTypes('update_value', ['null', 'callable']);
+        $resolver->setAllowedTypes('add_value', ['null', 'callable']);
+        $resolver->setAllowedTypes('remove_value', ['null', 'callable']);
+        $resolver->setAllowedTypes('write_error_message', ['null', 'string']);
+        $resolver->setAllowedTypes('factory', ['null', 'callable']);
+        $resolver->setAllowedTypes('factory_error_message', ['null', 'string']);
+
+        $resolver->setNormalizer('get_value', function (Options $options, ?callable $getter) {
+            if ($options['add_value'] && !$options['remove_value']) {
+                throw new InvalidOptionsException('You cannot use "add_value" without "remove_value".');
+            }
+            if ($options['remove_value'] && !$options['add_value']) {
+                throw new InvalidOptionsException('You cannot use "remove_value" without "add_value".');
+            }
+            if ($options['update_value'] && $options['add_value']) {
+                throw new InvalidOptionsException('You cannot use "update_value" when adder and remover is set.');
+            }
+
+            $isUpdaterSet = $options['update_value'] || $options['add_value'];
+            if (!$getter && $isUpdaterSet) {
+                throw new InvalidOptionsException('You must define "get_value".');
+            }
+            if ($getter && !$isUpdaterSet) {
+                throw new InvalidOptionsException('You cannot use "get_value" without "update_value" or using "add_value" and "remove_value".');
+            }
+
+            return $getter;
+        });
 
         $resolver->setNormalizer('empty_data', function (Options $options, ?callable $value) {
             /** @var callable|null $factory */
@@ -75,15 +108,16 @@ class StrictFormTypeExtension extends AbstractTypeExtension
         });
     }
 
+    /**
+     * @return mixed
+     */
     private function getDataFromCallable(FormInterface $form, callable $factory, ?string $errorMessage)
     {
         try {
-            $arguments = $this->getArgumentsFromForm($form, $factory);
+            $arguments = $this->getArgumentsFromFactory($form, $factory);
             $arguments = iterator_to_array($arguments, false);
 
             return $factory(...$arguments);
-        } catch (OutOfBoundsException $e) {
-            throw new OutOfBoundsException($e->getMessage().' Make sure your factory signature matches form fields.');
         } catch (TypeError $e) {
             if ($errorMessage) {
                 $translatedMessage = $this->translator ? $this->translator->trans($errorMessage) : $errorMessage;
@@ -94,20 +128,23 @@ class StrictFormTypeExtension extends AbstractTypeExtension
         }
     }
 
-    private function getArgumentsFromForm(FormInterface $form, callable $factory): Generator
+    private function getArgumentsFromFactory(FormInterface $form, callable $factory): Generator
     {
         $reader = $this->callableReader;
         $reflection = $reader->getReflection($factory);
         foreach ($reflection->getParameters() as $parameter) {
+            $parameterName = $parameter->getName();
             if (!$parameter->hasType()) {
-                throw new InvalidArgumentException(sprintf('No typehint for parameter name "%s".', $reflection->getName()));
+                throw new InvalidArgumentException(sprintf('No typehint for parameter name "%s".', $parameterName));
             }
-            $parameter->getClass();
             $type = $parameter->getClass();
             if ($type && $type->implementsInterface(FormInterface::class)) {
                 yield $form;
             } else {
-                yield $form->get($parameter->getName())->getData();
+                if (!$form->has($parameterName)) {
+                    throw new FactoryException(sprintf('No form field with name "%s".', $parameterName));
+                }
+                yield $form->get($parameterName)->getData();
             }
         }
     }

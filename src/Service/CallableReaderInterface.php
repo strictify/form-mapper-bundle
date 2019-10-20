@@ -8,7 +8,5 @@ use ReflectionFunctionAbstract;
 
 interface CallableReaderInterface
 {
-    public function isPositionTypehinted(callable $callable, int $position): bool;
-
     public function getReflection(callable $callable): ReflectionFunctionAbstract;
 }

@@ -10,10 +10,16 @@ use Strictify\FormMapper\Service\AccessorInterface;
 use Strictify\FormMapper\Service\CallableReader;
 use Strictify\FormMapper\Service\CallableReaderInterface;
 use Strictify\FormMapper\Service\Comparator\DateTimeComparator;
+use Strictify\FormMapper\Tests\Application\Repository\TestRepository;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class Factory
 {
+    public static function getRepository(): TestRepository
+    {
+        return new TestRepository();
+    }
+
     public static function getAccessor(): AccessorInterface
     {
         $dateTimeComparator = new DateTimeComparator();
@@ -30,12 +36,12 @@ class Factory
     {
         $reader = self::getCallableReader();
 
-        return new StrictFormTypeExtension($reader, self::getTranslator());
+        return new StrictFormTypeExtension($reader, self::getAccessor(), self::getTranslator());
     }
 
     public static function getTranslator(): TranslatorInterface
     {
-        return new class implements TranslatorInterface {
+        return new class() implements TranslatorInterface {
             public function trans($id, array $parameters = [], $domain = null, $locale = null): string
             {
                 return $id;

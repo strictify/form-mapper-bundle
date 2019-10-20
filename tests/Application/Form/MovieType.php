@@ -14,7 +14,14 @@ class MovieType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add('name', TextType::class);
+        $builder->add('name', TextType::class, [
+            'get_value' => function (Movie $movie) {
+                return $movie->getName();
+            },
+            'update_value' => function (string $name, Movie $movie): void {
+                $movie->rename($name);
+            },
+        ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

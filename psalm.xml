@@ -17,5 +17,6 @@
         <LessSpecificReturnType errorLevel="info" />
         <MixedAssignment errorLevel="suppress" />
         <MixedArgument errorLevel="suppress" />
+        <MissingClosureReturnType errorLevel="suppress" />
     </issueHandlers>
 </psalm>

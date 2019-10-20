@@ -23,7 +23,7 @@ class Movie
         return $this->name;
     }
 
-    public function setName($name): void
+    public function rename($name): void
     {
         $this->name = $name;
     }

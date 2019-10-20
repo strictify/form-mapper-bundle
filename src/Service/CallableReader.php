@@ -10,7 +10,6 @@ use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use Closure;
 use function is_array;
-use function sprintf;
 
 class CallableReader implements CallableReaderInterface
 {
@@ -26,21 +25,5 @@ class CallableReader implements CallableReaderInterface
         }
 
         throw new InvalidArgumentException('Unsupported callable, use Closures or [$object, "method"] syntax.');
-    }
-
-    /**
-     * @deprecated
-     */
-    public function isPositionTypehinted(callable $callable, int $position): bool
-    {
-        $reflection = $this->getReflection($callable);
-        $params = $reflection->getParameters();
-        if (!isset($params[$position])) {
-            throw new InvalidArgumentException(sprintf('No parameter at position "%d".', $position));
-        }
-
-        $parameter = $params[$position];
-
-        return $parameter->hasType();
     }
 }
