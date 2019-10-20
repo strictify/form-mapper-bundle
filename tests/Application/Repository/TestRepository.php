@@ -9,7 +9,7 @@ use Strictify\FormMapper\Tests\Application\Entity\Movie;
 use Strictify\FormMapper\Tests\Application\Entity\User;
 
 /**
- * Used to simulate Doctrines' identity map
+ * Used to simulate Doctrines' identity map.
  */
 class TestRepository
 {

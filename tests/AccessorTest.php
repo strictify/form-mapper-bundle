@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Tests;
 
 use DateTimeInterface;
+use Strictify\FormMapper\Accessor\AccessorBuilder;
 use Strictify\FormMapper\Tests\Application\Entity\User;
-use Strictify\FormMapper\Accessor;
 use PHPUnit\Framework\TestCase;
 use DateTime;
 use Strictify\FormMapper\Tests\Application\Repository\TestRepository;
@@ -21,7 +21,7 @@ class AccessorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->accessor = new Accessor();
+        $this->accessor = (new AccessorBuilder())->getAccessor();
         $this->user = (new TestRepository())->getArnold();
         $this->firstNameConfig = [
             'get_value' => static function (User $user) {

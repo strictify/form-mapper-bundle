@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Strictify\FormMapper;
+namespace Strictify\FormMapper\Accessor;
 
 use DateTimeInterface;
 use Traversable;
@@ -10,7 +10,7 @@ use function array_search;
 use function is_iterable;
 use function iterator_to_array;
 
-class Accessor
+class Accessor implements AccessorInterface
 {
     public function update($entity, $newValue, array $config): void
     {
