@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Tests;
 
 use DateTimeInterface;
-use Strictify\FormMapper\Accessor\AccessorBuilder;
+use Strictify\FormMapper\Tests\Application\Factory\AccessorBuilder;
 use Strictify\FormMapper\Tests\Application\Entity\User;
 use PHPUnit\Framework\TestCase;
 use DateTime;

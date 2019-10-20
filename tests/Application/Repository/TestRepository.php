@@ -14,7 +14,6 @@ use Strictify\FormMapper\Tests\Application\Entity\User;
 class TestRepository
 {
     private $user;
-
     private $predator;
     private $terminator;
 

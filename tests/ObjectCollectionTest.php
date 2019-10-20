@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Tests;
 
-use Strictify\FormMapper\Accessor\AccessorBuilder;
+use Strictify\FormMapper\Tests\Application\Factory\AccessorBuilder;
 use Strictify\FormMapper\Tests\Application\Entity\Movie;
 use Strictify\FormMapper\Tests\Application\Entity\User;
 use PHPUnit\Framework\TestCase;
@@ -36,10 +36,11 @@ class ObjectCollectionTest extends TestCase
         ];
     }
 
-    public function testCollection(): void
+    public function testCollectionAdd(): void
     {
         $user = $this->user;
 
+        $terminator = $this->repository->getTerminatorMovie();
         $predator = $this->repository->getPredatorMovie();
         $submitted = [1 => $predator];
         $this->accessor->update($user, $submitted, $this->moviesConfig);
@@ -48,6 +49,26 @@ class ObjectCollectionTest extends TestCase
         $eraser = new Movie('Eraser');
         $submitted = [2 => $eraser];
         $this->accessor->update($user, $submitted, $this->moviesConfig);
-        $this->assertSame($submitted, $user->getMovies());
+
+        $this->assertNotContains($predator, $user->getMovies());
+        $this->assertNotContains($terminator, $user->getMovies());
+        $this->assertContains($eraser, $user->getMovies());
+    }
+
+    public function testRemoveAndAdd(): void
+    {
+        $user = $this->user;
+
+        $terminator = $this->repository->getTerminatorMovie();
+        $predator = $this->repository->getPredatorMovie();
+        $eraser = new Movie('Eraser');
+
+        // overwrite Predator and replace with Eraser
+        $submitted = [0 => $terminator, 1 => $eraser];
+        $this->accessor->update($user, $submitted, $this->moviesConfig);
+
+        $this->assertNotContains($predator, $user->getMovies());
+        $this->assertContains($terminator, $user->getMovies());
+        $this->assertContains($eraser, $user->getMovies());
     }
 }

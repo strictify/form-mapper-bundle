@@ -32,7 +32,8 @@
         "symfony/css-selector": "^4.0",
         "symfony/phpunit-bridge": "^4.0",
         "symfony/var-dumper": "^4.0",
-        "symplify/easy-coding-standard": "^6.1"
+        "symplify/easy-coding-standard": "^6.1",
+        "vimeo/psalm": "^3.6"
     },
     "autoload": {
         "psr-4": {

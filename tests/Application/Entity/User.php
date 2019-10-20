@@ -43,7 +43,7 @@ class User
     }
 
     /**
-     * @psalm-return array<int, string>
+     * @psalm-return array<array-key, string>
      *
      * @return array
      */

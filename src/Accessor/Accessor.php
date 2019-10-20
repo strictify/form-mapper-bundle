@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Accessor;
 
-use DateTimeInterface;
+use Strictify\FormMapper\Accessor\Comparator\ComparatorInterface;
+use Generator;
 use Traversable;
 use function array_search;
 use function is_iterable;
@@ -12,66 +13,103 @@ use function iterator_to_array;
 
 class Accessor implements AccessorInterface
 {
-    public function update($entity, $newValue, array $config): void
+    /**
+     * @var ComparatorInterface[]|iterable
+     *
+     * @psalm-var iterable<array-key, ComparatorInterface>
+     */
+    private $comparators;
+
+    /**
+     * @psalm-param iterable<array-key, ComparatorInterface> $comparators
+     */
+    public function __construct(iterable $comparators)
     {
-        $oldValue = $config['get_value']($entity);
+        $this->comparators = $comparators;
+    }
+
+    public function update($object, $newValue, array $config): void
+    {
+        $getter = $config['get_value'];
+        $oldValue = $getter($object);
         $isMultiple = is_iterable($oldValue);
 
         if (!$isMultiple) {
-            $this->setSingle($oldValue, $newValue, $config['update_value'], $entity);
+            $this->setSingle($oldValue, $newValue, $config['update_value'], $object);
 
             return;
         }
 
-        $this->setMultiple($entity, $oldValue, $newValue, $config['add_value'], $config['remove_value']);
+        $this->setMultiple($object, $oldValue, $newValue, $config['add_value'], $config['remove_value']);
     }
 
-    private function setMultiple($entity, $oldValues, $newValues, callable $adder, callable $remover): void
+    /**
+     * @param array|object $object
+     *
+     * @psalm-param iterable<array-key, mixed> $oldValues
+     * @psalm-param iterable<array-key, mixed> $newValues
+     */
+    private function setMultiple($object, iterable $oldValues, iterable $newValues, callable $adder, callable $remover): void
     {
         $addedValues = $this->getExtraValues($oldValues, $newValues);
         $removedValues = $this->getExtraValues($newValues, $oldValues);
-        foreach ($addedValues as $value) {
-            $adder($value, $entity);
-        }
+
         foreach ($removedValues as $value) {
-            $remover($value, $entity);
+            $remover($value, $object);
+        }
+        foreach ($addedValues as $value) {
+            $adder($value, $object);
         }
     }
 
-    private function setSingle($oldValue, $newValue, callable $setter, $entity): void
+    /**
+     * @param mixed    $oldValue
+     * @param mixed    $newValue
+     * @param callable $setter
+     * @param mixed    $object
+     */
+    private function setSingle($oldValue, $newValue, callable $setter, $object): void
     {
         if ($this->isEqual($oldValue, $newValue)) {
             return;
         }
-        $setter($newValue, $entity);
+        $setter($newValue, $object);
     }
 
-    private function getExtraValues(iterable $originalValues, array $submittedValues): array
+    private function getExtraValues(iterable $originalValues, iterable $submittedValues): Generator
     {
         if ($originalValues instanceof Traversable) {
             $originalValues = iterator_to_array($originalValues, true);
         }
+        if ($submittedValues instanceof Traversable) {
+            $submittedValues = iterator_to_array($submittedValues, true);
+        }
 
-        $extraValues = [];
         foreach ($submittedValues as $key => $value) {
+            /** @psalm-var array-key|false $searchKey */
             $searchKey = array_search($value, $originalValues, true);
 
             if (false === $searchKey || $key !== $searchKey || !$this->isEqual($submittedValues[$searchKey], $value)) {
-                $extraValues[$key] = $value;
+                yield $value;
             }
         }
-
-        return $extraValues;
     }
 
+    /**
+     * @param mixed $oldValue
+     * @param mixed $newValue
+     */
     private function isEqual($oldValue, $newValue): bool
     {
+        // simple comparison first
         if ($oldValue === $newValue) {
             return true;
         }
-        if ($oldValue instanceof DateTimeInterface || $newValue instanceof DateTimeInterface) {
-            /* @noinspection TypeUnsafeComparisonInspection */
-            return $oldValue == $newValue;
+
+        foreach ($this->comparators as $comparator) {
+            if ($comparator->isEqual($oldValue, $newValue)) {
+                return true;
+            }
         }
 
         return false;

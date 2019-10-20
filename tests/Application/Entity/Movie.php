@@ -13,6 +13,11 @@ class Movie
         $this->name = $name;
     }
 
+    public function __toString()
+    {
+        return $this->name;
+    }
+
     public function getName(): string
     {
         return $this->name;
