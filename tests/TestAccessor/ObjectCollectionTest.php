@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Strictify\FormMapper\Tests;
+namespace Strictify\FormMapper\Tests\TestAccessor;
 
-use Strictify\FormMapper\Tests\Application\Factory\AccessorBuilder;
+use Strictify\FormMapper\Tests\Application\Factory\Factory;
 use Strictify\FormMapper\Tests\Application\Entity\Movie;
 use Strictify\FormMapper\Tests\Application\Entity\User;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +19,7 @@ class ObjectCollectionTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->accessor = (new AccessorBuilder())->getAccessor();
+        $this->accessor = Factory::getAccessor();
         $this->repository = new TestRepository();
         $this->user = $this->repository->getArnold();
 

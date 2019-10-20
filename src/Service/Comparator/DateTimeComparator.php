@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Strictify\FormMapper\Accessor\Comparator;
+namespace Strictify\FormMapper\Service\Comparator;
 
 use DateTimeInterface;
 

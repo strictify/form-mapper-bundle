@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Strictify\FormMapper\Accessor;
+namespace Strictify\FormMapper\Service;
 
-use Strictify\FormMapper\Accessor\Comparator\ComparatorInterface;
+use Strictify\FormMapper\Service\Comparator\ComparatorInterface;
 use Generator;
 use Traversable;
 use function array_search;
