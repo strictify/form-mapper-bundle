@@ -24,7 +24,7 @@ class AccessorTest extends TestCase
         $this->accessor = Factory::getAccessor();
         $this->user = (new TestRepository())->getArnold();
         $this->firstNameConfig = [
-            'get_value' => static function (User $user) {
+            'get_value' => function (User $user) {
                 return $user->getName();
             },
             'update_value' => static function (string $firstName, User $user): void {

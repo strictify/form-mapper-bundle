@@ -7,6 +7,7 @@ namespace Strictify\FormMapper\Service;
 use Strictify\FormMapper\Service\Comparator\ComparatorInterface;
 use Generator;
 use Traversable;
+use TypeError;
 use function array_search;
 use function is_iterable;
 use function iterator_to_array;
@@ -31,7 +32,11 @@ class Accessor implements AccessorInterface
     public function update($object, $newValue, array $config): void
     {
         $getter = $config['get_value'];
-        $oldValue = $getter($object);
+        try {
+            $oldValue = $getter($object);
+        } catch (TypeError $e) {
+            $oldValue = null;
+        }
         $isMultiple = is_iterable($oldValue) || is_iterable($newValue);
 
         if (!$isMultiple) {
@@ -104,7 +109,6 @@ class Accessor implements AccessorInterface
         if ($oldValue === $newValue) {
             return true;
         }
-
         foreach ($this->comparators as $comparator) {
             if ($comparator->isEqual($oldValue, $newValue)) {
                 return true;

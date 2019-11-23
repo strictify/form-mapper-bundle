@@ -94,7 +94,7 @@ class StrictFormTypeExtension extends AbstractTypeExtension
             return $getter;
         });
 
-        $resolver->setNormalizer('empty_data', function (Options $options, ?callable $value) {
+        $resolver->setNormalizer('empty_data', function (Options $options, $value) {
             /** @var callable|null $factory */
             $factory = $options['factory'];
             if (!$factory) {

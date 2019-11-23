@@ -60,9 +60,7 @@ class StrictFormMapper implements DataMapperInterface
         $this->defaultMapper->mapFormsToData($unmappedForms, $data);
     }
 
-    /**
-     * @param array|object $data
-     */
+    /** @param array|object $data */
     private function writeFormsToData(FormInterface $form, &$data): bool
     {
         $config = $form->getConfig();
@@ -75,21 +73,18 @@ class StrictFormMapper implements DataMapperInterface
         $submittedValue = $form->getData();
 
         try {
-            /**
-             * @psalm-param array{get_value: callable, update_value: callable, add_value: callable, remove_value: callable} $options
-             */
+            /** @psalm-param array{get_value: callable, update_value: callable, add_value: callable, remove_value: callable} $options */
             $options = $config->getOptions();
             $this->accessor->update($data, $submittedValue, $options);
         } catch (TypeError $e) {
+//            dd($e->getMessage());
             $this->addError($submittedValue, $form, $e);
         }
 
         return true;
     }
 
-    /**
-     * @param mixed $submittedValue
-     */
+    /** @param mixed $submittedValue */
     private function addError($submittedValue, FormInterface $form, TypeError $e): void
     {
         // Second argument is typehinted data object.

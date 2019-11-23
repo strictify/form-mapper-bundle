@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services
+        https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="strictify_form_mapper.form_extension" class="Strictify\FormMapper\Extension\StrictFormTypeExtension">
+            <argument type="service" id="strictify.form_mapper.service.callable_reader" />
+            <argument type="service" id="strictify_form_mapper.accessor" />
+            <argument type="service" id="translator" on-invalid="null"/>
+            <tag name="form.type_extension" priority="1"
+                 extended-type="Symfony\Component\Form\Extension\Core\Type\FormType"/>
+        </service>
+
+        <service id="strictify_form_mapper.comparator.date_type"
+                 class="Strictify\FormMapper\Service\Comparator\DateTimeComparator">
+            <tag name="strictify_form_mapper.comparator"/>
+        </service>
+
+        <service id="strictify_form_mapper.accessor" class="Strictify\FormMapper\Service\Accessor">
+            <argument type="tagged_iterator" tag="strictify_form_mapper.comparator"/>
+        </service>
+
+        <service id="strictify.form_mapper.service.callable_reader" class="Strictify\FormMapper\Service\CallableReader">
+        </service>
+
+    </services>
+</container>
