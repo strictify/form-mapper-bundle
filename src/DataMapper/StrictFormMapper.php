@@ -77,7 +77,6 @@ class StrictFormMapper implements DataMapperInterface
             $options = $config->getOptions();
             $this->accessor->update($data, $submittedValue, $options);
         } catch (TypeError $e) {
-//            dd($e->getMessage());
             $this->addError($submittedValue, $form, $e);
         }
 
