@@ -10,16 +10,16 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class FieldAccessExtension extends AbstractTypeExtension
 {
+    public static function getExtendedTypes(): iterable
+    {
+        yield FormType::class;
+    }
+
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'get_value' => null,
             'update_value' => null,
         ]);
-    }
-
-    public static function getExtendedTypes(): iterable
-    {
-        yield FormType::class;
     }
 }

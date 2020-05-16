@@ -30,7 +30,5 @@ class UserTestType extends AbstractType
         $resolver->setDefault('factory', function (string $firstName, string $lastName) {
             return new User($firstName, $lastName);
         });
-        // this one is needed for default mapper
-        $resolver->setDefault('data_class', User::class);
     }
 }

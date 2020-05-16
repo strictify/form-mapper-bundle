@@ -6,7 +6,8 @@ namespace Strictify\FormMapper\Tests\Factory;
 
 use Strictify\FormMapper\Tests\AbstractTypeTestCase;
 use Strictify\FormMapper\Tests\Application\Entity\User;
-use Strictify\FormMapper\Tests\Application\Form\UserTestType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\FormInterface;
 
 class FactoryTest extends AbstractTypeTestCase
 {
@@ -18,18 +19,9 @@ class FactoryTest extends AbstractTypeTestCase
         $this->user = new User('John', 'Wick');
     }
 
-    /**
-     * Test fixture, just in case. It will be easier to debug tests if User was changed later.
-     */
-    public function testGetter(): void
+    public function testUserIsCreatedWithValidData(): void
     {
-        $user = $this->user;
-        self::assertEquals('John', $user->getFirstName());
-    }
-
-    public function testUserIsCreated(): void
-    {
-        $form = $this->factory->create(UserTestType::class, null);
+        $form = $this->createUserForm();
         $form->submit(['firstName' => 'Bruce', 'lastName' => 'Willis']);
         self::assertTrue($form->isValid());
         /** @var User $user */
@@ -37,10 +29,42 @@ class FactoryTest extends AbstractTypeTestCase
         self::assertEquals('Bruce', $user->getFirstName());
     }
 
+    /**
+     * Factory requires `string $lastName` but null is submitted; form must become invalid.
+     */
+    public function testInvalidLastName(): void
+    {
+        $form = $this->createUserForm();
+        $form->submit(['firstName' => 'Bruce', 'lastName' => null]);
+        self::assertFalse($form->isValid());
+    }
+    /**
+     * Factory requires `string $lastName` but it is not submitted; form must become invalid.
+     */
     public function testMissingField(): void
     {
-        $form = $this->factory->create(UserTestType::class, null);
+        $form = $this->createUserForm();
         $form->submit(['firstName' => 'Bruce']);
         self::assertFalse($form->isValid());
+    }
+
+    /**
+     * This test if just for factory, accessors are irrelevant.
+     */
+    private function createUserForm(): FormInterface
+    {
+        $factory = function (string $firstName, string $lastName) {
+            return new User($firstName, $lastName);
+        };
+        $builder = $this->factory->createBuilder(FormType::class, null, ['factory' => $factory]);
+        $builder->add('firstName', null, [
+            'mapped' => false,
+        ]);
+
+        $builder->add('lastName', null, [
+            'mapped' => false,
+        ]);
+
+        return $builder->getForm();
     }
 }

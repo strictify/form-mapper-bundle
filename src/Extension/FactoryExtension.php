@@ -15,6 +15,7 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use function gettype;
 use function sprintf;
 use function trigger_error;
 
@@ -45,7 +46,7 @@ class FactoryExtension extends AbstractTypeExtension
     {
         return function (FormInterface $form) use ($factory) {
             try {
-                $arguments = $this->getFormValues($form, $factory);
+                $arguments = $this->getFactoryArguments($form, $factory);
 
                 return $factory(...$arguments);
             } catch (FactoryExceptionInterface $e) {
@@ -56,7 +57,7 @@ class FactoryExtension extends AbstractTypeExtension
         };
     }
 
-    private function getFormValues(FormInterface $form, Closure $factory): array
+    private function getFactoryArguments(FormInterface $form, Closure $factory): array
     {
         $reflection = new ReflectionFunction($factory);
         $arguments = [];
@@ -85,10 +86,15 @@ class FactoryExtension extends AbstractTypeExtension
         $value = $form->get($name)->getData();
 
         // if factory param is not typehinted, early exit. It is up to user to take care of it.
-        if (!$parameter->hasType()) {
+        $parameterType = $parameter->getType();
+        if (!$parameterType) {
             @trigger_error(sprintf('Factory parameter "%s" should be typehinted.', $name), E_USER_WARNING);
 
             return $value;
+        }
+
+        if (gettype($value) !== $parameterType->getName()) {
+            throw new MissingFactoryFieldException(sprintf('Invalid type for field "%s".', $name), $name);
         }
 
         return $value;
