@@ -1,19 +1,31 @@
 <?xml version="1.0"?>
 <psalm
-    totallyTyped="true"
-    resolveFromConfigFile="true"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns="https://getpsalm.org/schema/config"
-    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+        useDocblockPropertyTypes="false"
+        resolveFromConfigFile="true"
+        addParamDefaultToDocblockType="false"
+        allowPhpStormGenerics="true"
+        findUnusedCode="false"
+        findUnusedVariablesAndParams="false"
+        reportMixedIssues="true"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://getpsalm.org/schema/config"
+        xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
     <projectFiles>
         <directory name="src" />
+        <directory name="tests" />
         <ignoreFiles>
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
 
     <issueHandlers>
+        <MissingDependency errorLevel="suppress">
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </MissingDependency>
+
         <LessSpecificReturnType errorLevel="info" />
         <MixedAssignment errorLevel="suppress" />
         <MixedArgument errorLevel="suppress" />

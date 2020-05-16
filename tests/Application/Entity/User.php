@@ -4,79 +4,35 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Tests\Application\Entity;
 
-use DateTimeInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-
 class User
 {
-    private $name;
-    private $dob;
-    private $tags;
-    private $movies;
+    private string $firstName;
 
-    public function __construct(string $name, DateTimeInterface $dob, array $movies)
+    private string $lastName;
+
+    public function __construct(string $firstName, string $lastName)
     {
-        $this->name = $name;
-        $this->dob = $dob;
-        $this->tags = new ArrayCollection([0 => 'Strong']);
-        $this->movies = new ArrayCollection($movies);
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
     }
 
-    public function getName(): string
+    public function getFirstName(): string
     {
-        return $this->name;
+        return $this->firstName;
     }
 
-    public function setName(string $name): void
+    public function setFirstName(string $firstName): void
     {
-        $this->name = $name;
+        $this->firstName = $firstName;
     }
 
-    public function getDob(): DateTimeInterface
+    public function getLastName(): string
     {
-        return $this->dob;
+        return $this->lastName;
     }
 
-    public function setDob(DateTimeInterface $dob): void
+    public function setLastName(string $lastName): void
     {
-        $this->dob = $dob;
-    }
-
-    /**
-     * @psalm-return array<array-key, string>
-     *
-     * @return array
-     */
-    public function getTags(): array
-    {
-        return $this->tags->toArray();
-    }
-
-    public function addTag(string $tag): void
-    {
-        $this->tags->add($tag);
-    }
-
-    public function removeTag(string $tag): void
-    {
-        $this->tags->removeElement($tag);
-    }
-
-    /**
-     * @return Movie[]
-     */
-    public function getMovies(): array
-    {
-        return $this->movies->toArray();
-    }
-
-    public function addMovie(Movie $movie): void
-    {
-        $this->movies->add($movie);
-    }
-
-    public function removeMovie(Movie $movie): void
-    {
-        $this->movies->removeElement($movie);
+        $this->lastName = $lastName;
     }
 }

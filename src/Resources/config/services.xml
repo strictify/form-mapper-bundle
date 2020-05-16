@@ -7,7 +7,7 @@
     <services>
         <service id="strictify_form_mapper.form_extension" class="Strictify\FormMapper\Extension\StrictFormTypeExtension">
             <argument type="service" id="strictify.form_mapper.service.callable_reader" />
-            <argument type="service" id="strictify_form_mapper.accessor" />
+            <argument type="service" id="Comparator" />
             <argument type="service" id="translator" on-invalid="null"/>
             <tag name="form.type_extension" priority="1"
                  extended-type="Symfony\Component\Form\Extension\Core\Type\FormType"/>
@@ -18,7 +18,7 @@
             <tag name="strictify_form_mapper.comparator"/>
         </service>
 
-        <service id="strictify_form_mapper.accessor" class="Strictify\FormMapper\Service\Accessor">
+        <service id="strictify_form_mapper.accessor" class="Strictify\FormMapper\Service\Comparator">
             <argument type="tagged_iterator" tag="strictify_form_mapper.comparator"/>
         </service>
 
