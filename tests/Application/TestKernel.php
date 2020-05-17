@@ -22,6 +22,9 @@ class TestKernel extends Kernel
         parent::__construct('test', true);
     }
 
+    /**
+     * @return array<array-key, \Symfony\Component\HttpKernel\Bundle\BundleInterface>
+     */
     public function registerBundles(): array
     {
         return [

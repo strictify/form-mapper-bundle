@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Extension;
 
 use Closure;
+use Generator;
 use ReflectionFunction;
 use ReflectionParameter;
 use Strictify\FormMapper\Exception\FactoryExceptionInterface;
@@ -16,6 +17,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use function gettype;
+use function iterator_to_array;
 use function sprintf;
 use function trigger_error;
 
@@ -31,41 +33,45 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->setDefault('factory', null);
         $resolver->addAllowedTypes('factory', ['null', Closure::class]);
 
+        $resolver->setDefault('show_factory_error', true);
+        $resolver->addAllowedTypes('show_factory_error', ['bool']);
+
         $resolver->setNormalizer('empty_data', function (Options $options, ?callable $default) {
             /** @var Closure|null $factory */
             $factory = $options['factory'];
             if (!$factory) {
                 return $default;
             }
+            /** @var bool $showFactoryError */
+            $showFactoryError = $options['show_factory_error'];
 
-            return $this->createEmptyDataClosure($factory);
+            return $this->createEmptyDataClosure($factory, $showFactoryError);
         });
     }
 
-    private function createEmptyDataClosure(Closure $factory): Closure
+    private function createEmptyDataClosure(Closure $factory, bool $showFactoryError): Closure
     {
-        return function (FormInterface $form) use ($factory) {
+        return function (FormInterface $form) use ($factory, $showFactoryError) {
             try {
-                $arguments = $this->getFactoryArguments($form, $factory);
+                $arguments = iterator_to_array($this->getFactoryArguments($form, $factory), false);
 
                 return $factory(...$arguments);
             } catch (FactoryExceptionInterface $e) {
-                $form->addError(new FormError($e->getMessage(), null, [], null, $e));
+                if ($showFactoryError) {
+                    $form->addError(new FormError($e->getMessage(), null, [], null, $e));
+                }
 
                 return fn () => null;
             }
         };
     }
 
-    private function getFactoryArguments(FormInterface $form, Closure $factory): array
+    private function getFactoryArguments(FormInterface $form, Closure $factory): Generator
     {
         $reflection = new ReflectionFunction($factory);
-        $arguments = [];
         foreach ($reflection->getParameters() as $parameter) {
-            $arguments[] = $this->getFormValue($form, $parameter);
+            yield $this->getFormValue($form, $parameter);
         }
-
-        return $arguments;
     }
 
     /**

@@ -1,2 +1,3 @@
 /vendor/
 /lsp
+.php_cs.cache

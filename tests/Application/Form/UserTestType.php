@@ -15,13 +15,13 @@ class UserTestType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('firstName', TextType::class, [
-            'get_value' => fn(User $user) => $user->getFirstName(),
-            'update_value' => fn(string $firstName, User $user) => $user->setFirstName($firstName),
+            'get_value' => fn (User $user) => $user->getFirstName(),
+            'update_value' => fn (string $firstName, User $user) => $user->changeFirstName($firstName),
         ]);
 
         $builder->add('lastName', TextType::class, [
-            'get_value' => fn(User $user) => $user->getLastName(),
-            'update_value' => fn(string $lastName, User $user) => $user->setLastName($lastName),
+            'get_value' => fn (User $user) => $user->getLastName(),
+            'update_value' => fn (string $lastName, User $user) => $user->changeLastName($lastName),
         ]);
     }
 

@@ -12,23 +12,33 @@
         xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
     <projectFiles>
-        <directory name="src" />
-        <directory name="tests" />
+        <directory name="src"/>
+        <directory name="tests"/>
         <ignoreFiles>
-            <directory name="vendor" />
+            <directory name="vendor"/>
         </ignoreFiles>
     </projectFiles>
 
     <issueHandlers>
-        <MissingDependency errorLevel="suppress">
+        <InternalMethod>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </InternalMethod>
+
+        <!-- This is just a patch till battle between psalm and phpunit is solved -->
+        <MissingDependency>
             <errorLevel type="suppress">
                 <directory name="tests"/>
             </errorLevel>
         </MissingDependency>
 
-        <LessSpecificReturnType errorLevel="info" />
-        <MixedAssignment errorLevel="suppress" />
-        <MixedArgument errorLevel="suppress" />
-        <MissingClosureReturnType errorLevel="suppress" />
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </UndefinedClass>
+
+        <MissingClosureReturnType errorLevel="suppress"/>
     </issueHandlers>
 </psalm>

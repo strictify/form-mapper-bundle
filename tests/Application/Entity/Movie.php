@@ -6,7 +6,7 @@ namespace Strictify\FormMapper\Tests\Application\Entity;
 
 class Movie
 {
-    private $name;
+    private string $name;
 
     public function __construct(string $name)
     {
@@ -23,7 +23,7 @@ class Movie
         return $this->name;
     }
 
-    public function rename($name): void
+    public function rename(string $name): void
     {
         $this->name = $name;
     }

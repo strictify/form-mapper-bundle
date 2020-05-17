@@ -21,7 +21,7 @@ class User
         return $this->firstName;
     }
 
-    public function setFirstName(string $firstName): void
+    public function changeFirstName(string $firstName): void
     {
         $this->firstName = $firstName;
     }
@@ -31,7 +31,7 @@ class User
         return $this->lastName;
     }
 
-    public function setLastName(string $lastName): void
+    public function changeLastName(string $lastName): void
     {
         $this->lastName = $lastName;
     }

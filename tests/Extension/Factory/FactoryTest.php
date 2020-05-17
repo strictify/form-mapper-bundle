@@ -2,23 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Strictify\FormMapper\Tests\Factory;
+namespace Strictify\FormMapper\Tests\Extension\Factory;
 
-use Strictify\FormMapper\Tests\AbstractTypeTestCase;
+use Strictify\FormMapper\Tests\Application\AbstractTypeTestCase;
 use Strictify\FormMapper\Tests\Application\Entity\User;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormInterface;
 
 class FactoryTest extends AbstractTypeTestCase
 {
-    private User $user;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->user = new User('John', 'Wick');
-    }
-
     public function testUserIsCreatedWithValidData(): void
     {
         $form = $this->createUserForm();
@@ -27,6 +19,7 @@ class FactoryTest extends AbstractTypeTestCase
         /** @var User $user */
         $user = $form->getData();
         self::assertEquals('Bruce', $user->getFirstName());
+        self::assertEquals('Willis', $user->getLastName());
     }
 
     /**
@@ -38,6 +31,7 @@ class FactoryTest extends AbstractTypeTestCase
         $form->submit(['firstName' => 'Bruce', 'lastName' => null]);
         self::assertFalse($form->isValid());
     }
+
     /**
      * Factory requires `string $lastName` but it is not submitted; form must become invalid.
      */
