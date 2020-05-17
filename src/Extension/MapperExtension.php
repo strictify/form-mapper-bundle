@@ -7,6 +7,7 @@ namespace Strictify\FormMapper\Extension;
 use Closure;
 use ReflectionFunction;
 use Strictify\FormMapper\DataMapper\StrictFormMapper;
+use Strictify\FormMapper\Service\Comparator;
 use Strictify\FormMapper\Util\OptionsValidator;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -24,6 +25,13 @@ use function in_array;
 
 class MapperExtension extends AbstractTypeExtension
 {
+    private Comparator $comparator;
+
+    public function __construct(Comparator $comparator)
+    {
+        $this->comparator = $comparator;
+    }
+
     public static function getExtendedTypes(): iterable
     {
         yield FormType::class;
@@ -35,7 +43,7 @@ class MapperExtension extends AbstractTypeExtension
         if (!$defaultMapper) {
             return;
         }
-        $strictMapper = new StrictFormMapper($defaultMapper);
+        $strictMapper = new StrictFormMapper($defaultMapper, $this->comparator);
         $builder->setDataMapper($strictMapper);
     }
 

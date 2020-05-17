@@ -42,7 +42,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Strictify\\FormMapper\\Tests\\": "tests"
+            "Strictify\\FormMapper\\Tests\\": "tests",
+            "Strictify\\FormMapper\\Tests\\Fixture\\": "tests\\fixtures"
         }
     },
     "scripts": {

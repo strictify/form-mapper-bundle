@@ -5,15 +5,25 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Accessor;
 
 use Closure;
-use LogicException;
 use ReflectionFunction;
+use Strictify\FormMapper\Service\Comparator;
+use Traversable;
+use function count;
 use function gettype;
+use function iterator_to_array;
 use function trigger_error;
 
 class Accessor
 {
+    private Comparator $comparator;
+
+    public function __construct(Comparator $comparator)
+    {
+        $this->comparator = $comparator;
+    }
+
     /**
-     * @param mixed $data
+     * @param array|object|null $data
      *
      * @return mixed
      */
@@ -23,9 +33,9 @@ class Accessor
         $params = $reflection->getParameters();
 
         $firstParam = $params[0] ?? null;
-        // no parameter provided, return default
-        if (!$firstParam) {
-            return $this->getDefault($isCollection);
+        // if no first param and no data, still make a call to getter; useful with `$builder->getData()` and arrow functions.
+        if (null === $firstParam && null === $data) {
+            return $getter();
         }
 
         // still no data (example: factory failure) but nullable is not allowed; return default as well
@@ -37,14 +47,12 @@ class Accessor
     }
 
     /**
-     * @param mixed $data
+     * @param array|object|null $data
      * @param mixed $submittedData
      */
     public function write(Closure $getter, Closure $updater, $data, $submittedData): bool
     {
-        if (null === $data) {
-            return false;
-        }
+        /** @var array|object|null $originalValue */
         $originalValue = $this->read($getter, $data, false);
         if ($this->isEqual($originalValue, $submittedData)) {
             return true;
@@ -53,11 +61,11 @@ class Accessor
         $reflection = new ReflectionFunction($updater);
         $params = $reflection->getParameters();
 
-        $firstParam = $params[0] ?? null;
-        if (!$firstParam) {
-            throw new LogicException('Method "update_value" must have parameter for submitted value.');
+        // if there are no params, do not make a call.
+        if (0 === count($params)) {
+            return false;
         }
-
+        $firstParam = $params[0];
         $type = $firstParam->getType();
         if (!$type) {
             @trigger_error('Method "update_value" should have typehint for first parameter.');
@@ -75,18 +83,63 @@ class Accessor
         return true;
     }
 
-    public function writeCollection(): void
+    /**
+     * @param object|array|null $data
+     * @param iterable<array-key, object|array> $submittedData
+     * @param Closure(mixed, object|array|null): void $adder
+     * @param Closure(mixed, object|array|null): void $remover
+     */
+    public function writeCollection(Closure $getter, Closure $adder, Closure $remover, $data, iterable $submittedData): bool
     {
-        throw new LogicException('N/a');
+        /** @var iterable<array-key, object|array> $originalValues */
+        $originalValues = $this->read($getter, $data, false);
+        $originalValues = $this->iterableToArray($originalValues);
+        $submittedData = $this->iterableToArray($submittedData);
+
+        $toAdd = $this->getExtraValues($originalValues, $submittedData);
+        $toRemove = $this->getExtraValues($submittedData, $originalValues);
+        foreach ($toAdd as $item) {
+            $adder($item, $data);
+        }
+        foreach ($toRemove as $item) {
+            $remover($item, $data);
+        }
+
+        return true;
     }
 
     /**
-     * @param mixed $originalValue
-     * @param mixed $submittedValue
+     * @param array<array-key, object|array> $originalValues
+     * @param array<array-key, object|array> $submittedValues
+     *
+     * @return array<array-key, object|array>
      */
-    private function isEqual($originalValue, $submittedValue): bool
+    private function getExtraValues(array $originalValues, array $submittedValues): array
     {
-        return $originalValue === $submittedValue;
+        /** @var array<array-key, object|array> $extraValues */
+        $extraValues = [];
+        foreach ($submittedValues as $key => $value) {
+            $searchKey = array_search($value, $originalValues, true);
+
+            if (false === $searchKey || $key !== $searchKey || !$this->isEqual($submittedValues[$searchKey], $value)) {
+                $extraValues[$key] = $value;
+            }
+        }
+
+        return $extraValues;
+    }
+
+    /**
+     * @param mixed $first
+     * @param mixed $second
+     */
+    private function isEqual($first, $second): bool
+    {
+        if ($first === $second) {
+            return true;
+        }
+
+        return $this->comparator->isEqual($first, $second);
     }
 
     /**
@@ -95,5 +148,21 @@ class Accessor
     private function getDefault(bool $isCollection)
     {
         return $isCollection ? [] : null;
+    }
+
+    /**
+     * @template T
+     *
+     * @psalm-param iterable<array-key, T> $iterable
+     *
+     * @psalm-return array<array-key, T>
+     */
+    private function iterableToArray($iterable): array
+    {
+        if ($iterable instanceof Traversable) {
+            return iterator_to_array($iterable, true);
+        }
+
+        return $iterable;
     }
 }

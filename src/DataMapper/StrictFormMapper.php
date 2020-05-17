@@ -6,6 +6,7 @@ namespace Strictify\FormMapper\DataMapper;
 
 use Closure;
 use Strictify\FormMapper\Accessor\Accessor;
+use Strictify\FormMapper\Service\Comparator;
 use Symfony\Component\Form\DataMapperInterface;
 
 /**
@@ -16,10 +17,10 @@ class StrictFormMapper implements DataMapperInterface
     private DataMapperInterface $defaultMapper;
     private Accessor $accessor;
 
-    public function __construct(DataMapperInterface $defaultMapper)
+    public function __construct(DataMapperInterface $defaultMapper, Comparator $comparator)
     {
         $this->defaultMapper = $defaultMapper;
-        $this->accessor = new Accessor();
+        $this->accessor = new Accessor($comparator);
     }
 
     public function mapDataToForms($data, $forms): void
@@ -46,17 +47,20 @@ class StrictFormMapper implements DataMapperInterface
     {
         $unmappedForms = [];
         foreach ($forms as $form) {
-            /** @var array{get_value: ?Closure, update_value: Closure, add_value: ?Closure, remove_value: ?Closure, prototype?: bool} $options */
-            $options = $form->getConfig()->getOptions();
+            $config = $form->getConfig();
+            /** @var array{get_value: ?Closure, update_value: Closure, add_value: Closure, remove_value: Closure, prototype?: bool} $options */
+            $options = $config->getOptions();
             $getter = $options['get_value'];
             $isCollection = isset($options['prototype']);
 
-            if (!$getter) {
+            if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
+                $updater = $options['update_value'];
+                $isCollection
+                    ? $this->accessor->writeCollection($getter, $options['add_value'], $options['remove_value'], $data, $form->getData())
+                    : $this->accessor->write($getter, $updater, $data, $form->getData());
+            } else {
                 $unmappedForms[] = $form;
-                continue;
             }
-            $updater = $options['update_value'];
-            $isCollection ? $this->accessor->writeCollection() : $this->accessor->write($getter, $updater, $data, $form->getData());
         }
 
         $this->defaultMapper->mapFormsToData($unmappedForms, $data);

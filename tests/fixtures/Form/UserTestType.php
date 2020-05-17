@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Strictify\FormMapper\Tests\Application\Form;
+namespace Strictify\FormMapper\Tests\Fixture\Form;
 
-use Strictify\FormMapper\Tests\Application\Entity\User;
+use Strictify\FormMapper\Tests\Fixture\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Tests\Extension\Factory;
 
-use Strictify\FormMapper\Tests\Application\AbstractTypeTestCase;
-use Strictify\FormMapper\Tests\Application\Entity\User;
+use Closure;
+use Strictify\FormMapper\Tests\AbstractTypeTestCase;
+use Strictify\FormMapper\Tests\Fixture\Entity\User;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormInterface;
 
@@ -42,14 +43,22 @@ class FactoryTest extends AbstractTypeTestCase
         self::assertFalse($form->isValid());
     }
 
+    public function testFormInterfaceIsInjected(): void
+    {
+        $factory = fn (FormInterface $form, string $lastName) => new User($form->get('firstName')->getData(), $lastName);
+        $form = $this->createUserForm($factory);
+        $form->submit(['firstName' => 'Bruce', 'lastName' => 'Wick']);
+        self::assertTrue($form->isValid());
+    }
+
     /**
      * This test if just for factory, accessors are irrelevant.
      */
-    private function createUserForm(): FormInterface
+    private function createUserForm(?Closure $factory = null): FormInterface
     {
-        $factory = function (string $firstName, string $lastName) {
-            return new User($firstName, $lastName);
-        };
+        if (!$factory) {
+            $factory = fn (string $firstName, string $lastName) => new User($firstName, $lastName);
+        }
         $builder = $this->factory->createBuilder(FormType::class, null, ['factory' => $factory]);
         $builder->add('firstName', null, [
             'mapped' => false,

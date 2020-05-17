@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Strictify\FormMapper\Tests\Application\Entity;
+namespace Strictify\FormMapper\Tests\Fixture\Entity;
 
 class Movie
 {

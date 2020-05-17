@@ -6,8 +6,12 @@ namespace Strictify\FormMapper\Tests\Accessor;
 
 use PHPUnit\Framework\TestCase;
 use Strictify\FormMapper\Accessor\Accessor;
-use Strictify\FormMapper\Tests\Application\Entity\User;
+use Strictify\FormMapper\Tests\Fixture\Entity\User;
+use Strictify\FormMapper\Tests\Fixture\Factory;
 
+/**
+ * @covers \Strictify\FormMapper\Accessor\Accessor::read
+ */
 class ReaderTest extends TestCase
 {
     private User $user;
@@ -17,7 +21,7 @@ class ReaderTest extends TestCase
     {
         parent::setUp();
         $this->user = new User('Bruce', 'Willis');
-        $this->accessor = new Accessor();
+        $this->accessor = Factory::createAccessor();
     }
 
     /**
@@ -39,6 +43,16 @@ class ReaderTest extends TestCase
         $getter = fn (User $user) => 'abc';
         $value = $this->accessor->read($getter, null, false);
         self::assertNull($value);
+    }
+
+    /**
+     * If missing first param, make a call. Useful when $builder->getData() is used.
+     */
+    public function testDefaultWhenMissingFirstParam(): void
+    {
+        $getter = fn () => 'abc';
+        $value = $this->accessor->read($getter, null, false);
+        self::assertEquals('abc', $value);
     }
 
     /**

@@ -86,7 +86,7 @@ class FactoryExtension extends AbstractTypeExtension
 
         $name = $parameter->getName();
         if (!$form->has($name)) {
-            throw new MissingFactoryFieldException(sprintf('Missing field "%s".', $name), $name);
+            throw new MissingFactoryFieldException(sprintf('Missing field "%s".', $name));
         }
 
         $value = $form->get($name)->getData();
@@ -100,7 +100,7 @@ class FactoryExtension extends AbstractTypeExtension
         }
 
         if (gettype($value) !== $parameterType->getName()) {
-            throw new MissingFactoryFieldException(sprintf('Invalid type for field "%s".', $name), $name);
+            throw new MissingFactoryFieldException(sprintf('Invalid type for field "%s".', $name));
         }
 
         return $value;

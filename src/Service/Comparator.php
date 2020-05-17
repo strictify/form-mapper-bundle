@@ -22,4 +22,19 @@ class Comparator implements AccessorInterface
     {
         $this->comparators = $comparators;
     }
+
+    /**
+     * @param mixed $first
+     * @param mixed $second
+     */
+    public function isEqual($first, $second): bool
+    {
+        foreach ($this->comparators as $comparator) {
+            if ($comparator->isEqual($first, $second)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

@@ -6,9 +6,9 @@ namespace Strictify\FormMapper\Tests\Extension\Mapper;
 
 use stdClass;
 use Strictify\FormMapper\Extension\MapperExtension;
-use Strictify\FormMapper\Tests\Application\AbstractTypeTestCase;
-use Strictify\FormMapper\Tests\Application\Entity\User;
-use Strictify\FormMapper\Tests\Application\Form\UserTestType;
+use Strictify\FormMapper\Tests\AbstractTypeTestCase;
+use Strictify\FormMapper\Tests\Fixture\Entity\User;
+use Strictify\FormMapper\Tests\Fixture\Form\UserTestType;
 
 /**
  * Test if constraints are added per field level, based on typehint of first param in `get_value`.

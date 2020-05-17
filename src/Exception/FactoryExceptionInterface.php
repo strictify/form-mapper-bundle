@@ -8,5 +8,4 @@ use Throwable;
 
 interface FactoryExceptionInterface extends Throwable
 {
-    public function getField(): string;
 }

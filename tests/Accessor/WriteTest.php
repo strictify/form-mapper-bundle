@@ -7,9 +7,13 @@ namespace Strictify\FormMapper\Tests\Accessor;
 use Closure;
 use PHPUnit\Framework\TestCase;
 use Strictify\FormMapper\Accessor\Accessor;
-use Strictify\FormMapper\Tests\Application\Entity\User;
+use Strictify\FormMapper\Tests\Fixture\Entity\User;
+use Strictify\FormMapper\Tests\Fixture\Factory;
 
-class WriterTest extends TestCase
+/**
+ * @covers \Strictify\FormMapper\Accessor\Accessor::write
+ */
+class WriteTest extends TestCase
 {
     private User $user;
     private Accessor $accessor;
@@ -18,7 +22,7 @@ class WriterTest extends TestCase
     {
         parent::setUp();
         $this->user = new User('Bruce', 'Willis');
-        $this->accessor = new Accessor();
+        $this->accessor = Factory::createAccessor();
     }
 
     public function testSimple(): void
@@ -39,8 +43,7 @@ class WriterTest extends TestCase
         $user->expects($this->once())
             ->method('changeFirstName');
 
-        [$getter, $updater] = $this->getterAndUpdater();
-        $this->accessor->write($getter, $updater, $user, 'John');
+        $this->callOnMock($user, 'John');
     }
 
     /**
@@ -56,8 +59,39 @@ class WriterTest extends TestCase
         $user->expects($this->never())
             ->method('changeFirstName');
 
+        $this->callOnMock($user, 'Bruce');
+    }
+
+    /**
+     * When there is no param in $writer, just ignore the call.
+     */
+    public function testMissingParams(): void
+    {
+        $user = $this->user;
+        [$getter] = $this->getterAndUpdater();
+        $updater = function () {
+            return $this->fail('This should have not been called.');
+        };
+        $this->accessor->write($getter, $updater, $user, 'John');
+        self::assertEquals('Bruce', $user->getFirstName());
+    }
+
+    /**
+     * When typehint is missing, still make a call but create E_USER_WARNING.
+     */
+    public function testMissingTypehint(): void
+    {
+        $user = $this->user;
+        [$getter] = $this->getterAndUpdater();
+        $updater = /** @param string $firstName */ fn ($firstName, User $user) => $user->changeFirstName($firstName);
+        $this->accessor->write($getter, $updater, $user, 'John');
+        self::assertEquals('John', $user->getFirstName());
+    }
+
+    private function callOnMock($mock, $submittedData): void
+    {
         [$getter, $updater] = $this->getterAndUpdater();
-        $this->accessor->write($getter, $updater, $user, 'Bruce');
+        $this->accessor->write($getter, $updater, $mock, $submittedData);
     }
 
     /**

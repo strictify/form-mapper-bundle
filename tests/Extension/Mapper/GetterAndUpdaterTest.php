@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Tests\Extension\Mapper;
 
-use Strictify\FormMapper\Tests\Application\AbstractTypeTestCase;
+use Strictify\FormMapper\Tests\AbstractTypeTestCase;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
-class ValidateAccessorsTest extends AbstractTypeTestCase
+class GetterAndUpdaterTest extends AbstractTypeTestCase
 {
     public function testSimple(): void
     {
@@ -25,11 +25,12 @@ class ValidateAccessorsTest extends AbstractTypeTestCase
     public function testMissingAdder(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessageMatches('/"update_value"/');
+        $this->expectExceptionMessageMatches('/"add_value"/');
 
         $this->factory->createBuilder()
             ->add('list', CollectionType::class, [
                 'get_value' => fn () => [],
+                'remove_value' => fn () => [],
             ])
             ->getForm();
     }
