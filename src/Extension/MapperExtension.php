@@ -36,12 +36,14 @@ class MapperExtension extends AbstractTypeExtension
         yield FormType::class;
     }
 
+    public function getExtendedType(): string
+    {
+        return FormType::class;
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $defaultMapper = $builder->getDataMapper();
-        if (!$defaultMapper) {
-            return;
-        }
         $strictMapper = new StrictFormMapper($defaultMapper, $this->comparator);
         $builder->setDataMapper($strictMapper);
     }
@@ -53,6 +55,7 @@ class MapperExtension extends AbstractTypeExtension
             'update_value' => null,
             'add_value' => null,
             'remove_value' => null,
+            'constraints' => [],
         ]);
         $resolver->setAllowedTypes('get_value', ['null', Closure::class]);
         $resolver->setAllowedTypes('update_value', ['null', Closure::class]);

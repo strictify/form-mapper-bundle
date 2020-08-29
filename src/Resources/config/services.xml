@@ -5,25 +5,29 @@
         https://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
-        <service id="strictify_form_mapper.form_extension" class="Strictify\FormMapper\Extension\StrictFormTypeExtension">
-            <argument type="service" id="strictify.form_mapper.service.callable_reader" />
-            <argument type="service" id="Comparator" />
-            <argument type="service" id="translator" on-invalid="null"/>
-            <tag name="form.type_extension" priority="1"
-                 extended-type="Symfony\Component\Form\Extension\Core\Type\FormType"/>
+        <service id="strictify_form_mapper.mapper_extension" class="Strictify\FormMapper\Extension\MapperExtension">
+            <argument type="service" id="strictify_form_mapper.comparator" />
+            <tag name="form.type_extension" priority="-100"
+                 extended-type="Symfony\Component\Form\Extension\Core\Type\FormType"
+                 extended_type="Symfony\Component\Form\Extension\Core\Type\FormType" />
         </service>
 
-        <service id="strictify_form_mapper.comparator.date_type"
-                 class="Strictify\FormMapper\Service\Comparator\DateTimeComparator">
-            <tag name="strictify_form_mapper.comparator"/>
+        <service id="strictify_form_mapper.factory_extension" class="Strictify\FormMapper\Extension\FactoryExtension">
+            <tag name="form.type_extension" priority="-101"
+                 extended-type="Symfony\Component\Form\Extension\Core\Type\FormType"
+                 extended_type="Symfony\Component\Form\Extension\Core\Type\FormType" />
         </service>
 
-        <service id="strictify_form_mapper.accessor" class="Strictify\FormMapper\Service\Comparator">
+        <service id="strictify_form_mapper.comparator" class="Strictify\FormMapper\Service\Comparator">
             <argument type="tagged_iterator" tag="strictify_form_mapper.comparator"/>
         </service>
 
-        <service id="strictify.form_mapper.service.callable_reader" class="Strictify\FormMapper\Service\CallableReader">
+        <service id="strictify_form_mapper.comparator.date_type" class="Strictify\FormMapper\Service\Comparator\DateTimeComparator">
+            <tag name="strictify_form_mapper.comparator"/>
         </service>
+
+<!--        <service id="strictify.form_mapper.service.callable_reader" class="Strictify\FormMapper\Service\CallableReader">-->
+<!--        </service>-->
 
     </services>
 </container>

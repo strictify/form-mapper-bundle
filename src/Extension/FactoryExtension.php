@@ -61,7 +61,7 @@ class FactoryExtension extends AbstractTypeExtension
                     $form->addError(new FormError($e->getMessage(), null, [], null, $e));
                 }
 
-                return fn () => null;
+                return null;
             }
         };
     }
@@ -89,6 +89,7 @@ class FactoryExtension extends AbstractTypeExtension
             throw new MissingFactoryFieldException(sprintf('Missing field "%s".', $name));
         }
 
+        /** @psalm-var mixed $value */
         $value = $form->get($name)->getData();
 
         // if factory param is not typehinted, early exit. It is up to user to take care of it.

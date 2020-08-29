@@ -58,6 +58,11 @@ class Accessor
             return true;
         }
 
+        return $this->submit($data, $updater, $submittedData);
+    }
+
+    private function submit($data, Closure $updater, $submittedData): bool
+    {
         $reflection = new ReflectionFunction($updater);
         $params = $reflection->getParameters();
 
@@ -65,16 +70,31 @@ class Accessor
         if (0 === count($params)) {
             return false;
         }
-        $firstParam = $params[0];
+        // if closure doesn't have params, it is equivalent of mapped: false but only for writer
+        $firstParam = $params[0] ?? null;
+        if (!$firstParam) {
+            return false;
+        }
         $type = $firstParam->getType();
         if (!$type) {
             @trigger_error('Method "update_value" should have typehint for first parameter.');
-            $updater($submittedData, $data);
+        }
+
+        // check type of first param; if not a match, don't make a call
+        if (gettype($submittedData) !== $type->getName()) {
+            return false;
+        }
+
+        $secondParam = $params[1] ?? null;
+
+        // user doesn't need base data; form can still be submitted
+        if (!$secondParam) {
+            $updater($submittedData);
 
             return true;
         }
 
-        if (gettype($submittedData) !== $type->getName()) {
+        if (null === $data && !$secondParam->allowsNull()) {
             return false;
         }
 
@@ -99,10 +119,12 @@ class Accessor
         $toAdd = $this->getExtraValues($originalValues, $submittedData);
         $toRemove = $this->getExtraValues($submittedData, $originalValues);
         foreach ($toAdd as $item) {
-            $adder($item, $data);
+            $this->submit($data, $adder, $item);
+//            $adder($item, $data);
         }
         foreach ($toRemove as $item) {
-            $remover($item, $data);
+            $this->submit($data, $remover, $item);
+//            $remover($item, $data);
         }
 
         return true;

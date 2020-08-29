@@ -8,6 +8,7 @@ use Closure;
 use Strictify\FormMapper\Accessor\Accessor;
 use Strictify\FormMapper\Service\Comparator;
 use Symfony\Component\Form\DataMapperInterface;
+use Symfony\Component\Form\Extension\Core\DataMapper\PropertyPathMapper;
 
 /**
  * @see Closure
@@ -17,8 +18,11 @@ class StrictFormMapper implements DataMapperInterface
     private DataMapperInterface $defaultMapper;
     private Accessor $accessor;
 
-    public function __construct(DataMapperInterface $defaultMapper, Comparator $comparator)
+    public function __construct(?DataMapperInterface $defaultMapper, Comparator $comparator)
     {
+        if (!$defaultMapper) {
+            $defaultMapper = new PropertyPathMapper();
+        }
         $this->defaultMapper = $defaultMapper;
         $this->accessor = new Accessor($comparator);
     }
@@ -31,7 +35,7 @@ class StrictFormMapper implements DataMapperInterface
             /** @var array{get_value: ?Closure, update_value: ?Closure, add_value: ?Closure, remove_value: ?Closure, prototype?: bool} $options */
             $options = $form->getConfig()->getOptions();
             $getter = $options['get_value'];
-            $isCollection = isset($options['prototype']);
+            $isCollection = isset($options['prototype']) || (isset($options['multiple']) && true === $options['multiple']);
 
             if (!$getter) {
                 $unmappedForms[] = $form;
