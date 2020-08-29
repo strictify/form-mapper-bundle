@@ -70,7 +70,7 @@ class WriteTest extends TestCase
         $user = $this->user;
         [$getter] = $this->getterAndUpdater();
         $updater = function () {
-            return $this->fail('This should have not been called.');
+            $this->fail('This should have not been called.');
         };
         $this->accessor->write($getter, $updater, $user, 'John');
         self::assertEquals('Bruce', $user->getFirstName());

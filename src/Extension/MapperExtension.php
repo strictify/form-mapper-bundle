@@ -12,7 +12,6 @@ use Strictify\FormMapper\Util\OptionsValidator;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraint;
@@ -86,10 +85,12 @@ class MapperExtension extends AbstractTypeExtension
 
         $reflection = new ReflectionFunction($updater);
         $params = $reflection->getParameters();
-        $firstParam = $params[0] ?? null;
-        if (!$firstParam) {
-            throw new UndefinedOptionsException('Method "update_value" must have first parameter.');
+        if (0 === count($params)) {
+            return $constraints;
         }
+
+        $firstParam = $params[0];
+
         $type = $firstParam->getType();
         // first param is not typehinted, do not add extra constraints
         if (!$type) {
