@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Accessor;
 
 use Closure;
+use Traversable;
 use ReflectionFunction;
 use Strictify\FormMapper\Service\Comparator;
-use Traversable;
 use function count;
 use function gettype;
-use function iterator_to_array;
 use function trigger_error;
+use function iterator_to_array;
 
 class Accessor
 {
@@ -62,52 +62,6 @@ class Accessor
     }
 
     /**
-     * @param array|object|null $data
-     * @param mixed $submittedData
-     */
-    private function submit($data, Closure $updater, $submittedData): bool
-    {
-        $reflection = new ReflectionFunction($updater);
-        $params = $reflection->getParameters();
-
-        // if there are no params, do not make a call.
-        if (0 === count($params)) {
-            return false;
-        }
-        // if closure doesn't have params, it is equivalent of mapped: false but only for writer
-        $firstParam = $params[0] ?? null;
-        if (!$firstParam) {
-            return false;
-        }
-        $type = $firstParam->getType();
-        if (!$type) {
-            @trigger_error('Method "update_value" should have typehint for first parameter.');
-        }
-
-        // check type of first param; if not a match, don't make a call
-        if ($type && gettype($submittedData) !== $type->getName()) {
-            return false;
-        }
-
-        $secondParam = $params[1] ?? null;
-
-        // user doesn't need base data; form can still be submitted
-        if (!$secondParam) {
-            $updater($submittedData);
-
-            return true;
-        }
-
-        if (null === $data && !$secondParam->allowsNull()) {
-            return false;
-        }
-
-        $updater($submittedData, $data);
-
-        return true;
-    }
-
-    /**
      * @param object|array|null $data
      * @param iterable<array-key, object|array> $submittedData
      * @param Closure(mixed, object|array|null): void $adder
@@ -130,6 +84,53 @@ class Accessor
             $this->submit($data, $remover, $item);
 //            $remover($item, $data);
         }
+
+        return true;
+    }
+
+    /**
+     * @param array|object|null $data
+     * @param mixed $submittedData
+     */
+    private function submit($data, Closure $callback, $submittedData): bool
+    {
+        $reflection = new ReflectionFunction($callback);
+        $params = $reflection->getParameters();
+
+        // if there are no params, do not make a call.
+        if (0 === count($params)) {
+            return false;
+        }
+        // if closure doesn't have params, it is equivalent of mapped: false but only for writer
+        $firstParam = $params[0] ?? null;
+        if (!$firstParam) {
+            return false;
+        }
+        $type = $firstParam->getType();
+        if (!$type) {
+            @trigger_error('Method "update_value" should have typehint for first parameter.');
+        }
+
+        // check type of first param; if not a match, don't make a call
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+        if ($type && gettype($submittedData) !== $type->getName()) {
+            return false;
+        }
+
+        $secondParam = $params[1] ?? null;
+
+        // user doesn't need base data; form can still be submitted
+        if (!$secondParam) {
+            $callback($submittedData);
+
+            return true;
+        }
+
+        if (null === $data && !$secondParam->allowsNull()) {
+            return false;
+        }
+
+        $callback($submittedData, $data);
 
         return true;
     }
