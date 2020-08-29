@@ -20,10 +20,7 @@ class StrictFormMapper implements DataMapperInterface
 
     public function __construct(?DataMapperInterface $defaultMapper, Comparator $comparator)
     {
-        if (!$defaultMapper) {
-            $defaultMapper = new PropertyPathMapper();
-        }
-        $this->defaultMapper = $defaultMapper;
+        $this->defaultMapper = $defaultMapper ?: new PropertyPathMapper();
         $this->accessor = new Accessor($comparator);
     }
 

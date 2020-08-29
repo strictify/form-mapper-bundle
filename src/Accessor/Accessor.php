@@ -61,6 +61,10 @@ class Accessor
         return $this->submit($data, $updater, $submittedData);
     }
 
+    /**
+     * @param array|object|null $data
+     * @param mixed $submittedData
+     */
     private function submit($data, Closure $updater, $submittedData): bool
     {
         $reflection = new ReflectionFunction($updater);
@@ -81,7 +85,7 @@ class Accessor
         }
 
         // check type of first param; if not a match, don't make a call
-        if (gettype($submittedData) !== $type->getName()) {
+        if ($type && gettype($submittedData) !== $type->getName()) {
             return false;
         }
 
