@@ -51,11 +51,18 @@ class MapperExtension extends AbstractTypeExtension
             'add_value' => null,
             'remove_value' => null,
             'constraints' => [],
+            'compare' =>
+                /**
+                 * @param mixed $defaultValue
+                 * @param mixed $submittedValue
+                 */
+                fn($defaultValue, $submittedValue) => $defaultValue === $submittedValue,
         ]);
         $resolver->setAllowedTypes('get_value', ['null', Closure::class]);
         $resolver->setAllowedTypes('update_value', ['null', Closure::class]);
         $resolver->setAllowedTypes('add_value', ['null', Closure::class]);
         $resolver->setAllowedTypes('remove_value', ['null', Closure::class]);
+        $resolver->setAllowedTypes('compare', ['callable']);
 
         $resolver->setNormalizer('get_value', fn (Options $options, ?Closure $getter) => $this->validateAccessors($options, $getter));
         $resolver->setNormalizer('constraints', fn (Options $options, array $constraints) => $this->normalizeConstraints($options, $constraints));
@@ -66,7 +73,7 @@ class MapperExtension extends AbstractTypeExtension
         if (!$getter) {
             return $getter;
         }
-        $isCollection = isset($options['prototype']);
+        $isCollection = $options['multiple'] ?? false;
 
         OptionsValidator::validate($options['update_value'], $options['add_value'], $options['remove_value'], $isCollection);
 

@@ -11,6 +11,8 @@ use Symfony\Component\Form\DataMapperInterface;
 use Symfony\Component\Form\Extension\Core\DataMapper\PropertyPathMapper;
 
 /**
+ * @psalm-type O=array{compare: callable, get_value: ?Closure, update_value: Closure, add_value: Closure, remove_value: Closure, prototype?: bool}
+ *
  * @see Closure
  */
 class StrictFormMapper implements DataMapperInterface
@@ -29,10 +31,10 @@ class StrictFormMapper implements DataMapperInterface
         $unmappedForms = [];
 
         foreach ($forms as $form) {
-            /** @var array{get_value: ?Closure, update_value: ?Closure, add_value: ?Closure, remove_value: ?Closure, prototype?: bool} $options */
+            /** @psalm-var O $options */
             $options = $form->getConfig()->getOptions();
             $getter = $options['get_value'];
-            $isCollection = isset($options['prototype']) || (isset($options['multiple']) && true === $options['multiple']);
+            $isCollection = $options['multiple'] ?? false;
 
             if (!$getter) {
                 $unmappedForms[] = $form;
@@ -49,16 +51,18 @@ class StrictFormMapper implements DataMapperInterface
         $unmappedForms = [];
         foreach ($forms as $form) {
             $config = $form->getConfig();
-            /** @var array{get_value: ?Closure, update_value: Closure, add_value: Closure, remove_value: Closure, prototype?: bool} $options */
+            /** @psalm-var O $options */
             $options = $config->getOptions();
             $getter = $options['get_value'];
-            $isCollection = isset($options['prototype']);
+            $compare = $options['compare'];
+            $isCollection = $options['multiple'] ?? false;
 
             if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
                 $updater = $options['update_value'];
+
                 $isCollection
-                    ? $this->accessor->writeCollection($getter, $options['add_value'], $options['remove_value'], $data, $form->getData())
-                    : $this->accessor->write($getter, $updater, $data, $form->getData());
+                    ? $this->accessor->writeCollection($compare, $getter, $options['add_value'], $options['remove_value'], $data, $form->getData())
+                    : $this->accessor->write($compare, $getter, $updater, $data, $form->getData());
             } else {
                 $unmappedForms[] = $form;
             }

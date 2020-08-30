@@ -28,8 +28,8 @@ class WriteTest extends TestCase
     public function testSimple(): void
     {
         $user = $this->user;
-        [$getter, $updater] = $this->getterAndUpdater();
-        $this->accessor->write($getter, $updater, $user, 'John');
+        [$compare, $getter, $updater] = $this->getterAndUpdater();
+        $this->accessor->write($compare, $getter, $updater, $user, 'John');
         self::assertEquals('John', $user->getFirstName());
     }
 
@@ -68,11 +68,11 @@ class WriteTest extends TestCase
     public function testMissingParams(): void
     {
         $user = $this->user;
-        [$getter] = $this->getterAndUpdater();
+        [$compare, $getter] = $this->getterAndUpdater();
         $updater = function () {
             $this->fail('This should have not been called.');
         };
-        $this->accessor->write($getter, $updater, $user, 'John');
+        $this->accessor->write($compare, $getter, $updater, $user, 'John');
         self::assertEquals('Bruce', $user->getFirstName());
     }
 
@@ -82,16 +82,16 @@ class WriteTest extends TestCase
     public function testMissingTypehint(): void
     {
         $user = $this->user;
-        [$getter] = $this->getterAndUpdater();
+        [$compare, $getter] = $this->getterAndUpdater();
         $updater = /** @param string $firstName */ fn ($firstName, User $user) => $user->changeFirstName($firstName);
-        $this->accessor->write($getter, $updater, $user, 'John');
+        $this->accessor->write($compare, $getter, $updater, $user, 'John');
         self::assertEquals('John', $user->getFirstName());
     }
 
     private function callOnMock($mock, $submittedData): void
     {
-        [$getter, $updater] = $this->getterAndUpdater();
-        $this->accessor->write($getter, $updater, $mock, $submittedData);
+        [$compare, $getter, $updater] = $this->getterAndUpdater();
+        $this->accessor->write($compare, $getter, $updater, $mock, $submittedData);
     }
 
     /**
@@ -100,6 +100,7 @@ class WriteTest extends TestCase
     private function getterAndUpdater(): array
     {
         return [
+            fn($default, $submitted) => $default === $submitted,
             fn (User $user) => $user->getFirstName(),
             fn (string $firstName, User $user) => $user->changeFirstName($firstName),
         ];

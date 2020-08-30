@@ -38,7 +38,7 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->addAllowedTypes('factory', ['null', Closure::class]);
         $resolver->addAllowedTypes('show_factory_error', ['bool']);
 
-        $resolver->setNormalizer('empty_data', function (Options $options, ?callable $default) {
+        $resolver->setNormalizer('empty_data', /** @param mixed $default */ function (Options $options, $default) {
             /** @var Closure|null $factory */
             $factory = $options['factory'];
             if (!$factory) {

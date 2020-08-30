@@ -23,7 +23,7 @@ class Accessor
     }
 
     /**
-     * @param array|object|null $data
+     * @param mixed $data
      *
      * @return mixed
      */
@@ -47,15 +47,15 @@ class Accessor
     }
 
     /**
-     * @param array|object|null $data
+     * @param mixed $data
      * @param mixed $submittedData
      */
-    public function write(Closure $getter, Closure $updater, $data, $submittedData): bool
+    public function write(callable $compare, Closure $getter, Closure $updater, $data, $submittedData): bool
     {
         /** @var array|object|null $originalValue */
         $originalValue = $this->read($getter, $data, false);
         $reflection = new ReflectionFunction($updater);
-        if ($this->isEqual($originalValue, $submittedData)) {
+        if ($this->isEqual($compare, $originalValue, $submittedData)) {
             return true;
         }
 
@@ -63,22 +63,23 @@ class Accessor
     }
 
     /**
-     * @param object|array|null $data
+     * @param mixed $data
      * @param iterable<array-key, object|array> $submittedData
      * @param Closure(mixed, object|array|null): void $adder
      * @param Closure(mixed, object|array|null): void $remover
      */
-    public function writeCollection(Closure $getter, Closure $adder, Closure $remover, $data, iterable $submittedData): bool
+    public function writeCollection(callable $compare, Closure $getter, Closure $adder, Closure $remover, $data, iterable $submittedData): bool
     {
         /** @var iterable<array-key, object|array> $originalValues */
         $originalValues = $this->read($getter, $data, false);
         $originalValues = $this->iterableToArray($originalValues);
         $submittedData = $this->iterableToArray($submittedData);
 
-        $toAdd = $this->getExtraValues($originalValues, $submittedData);
-        $toRemove = $this->getExtraValues($submittedData, $originalValues);
+        $toAdd = $this->getExtraValues($compare, $originalValues, $submittedData);
+        $toRemove = $this->getExtraValues($compare, $submittedData, $originalValues);
         $adderReflection = new ReflectionFunction($adder);
         $removerReflection = new ReflectionFunction($remover);
+
         foreach ($toAdd as $item) {
             $this->submit($data, $item, $adderReflection);
 //            $adder($item, $data);
@@ -92,7 +93,7 @@ class Accessor
     }
 
     /**
-     * @param array|object|null $data
+     * @param mixed $data
      * @param mixed $submittedData
      */
     private function submit($data, $submittedData, ReflectionFunction $reflection): bool
@@ -115,7 +116,7 @@ class Accessor
 
         // check type of first param; if not a match, don't make a call
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        if ($type && gettype($submittedData) !== $type->getName()) {
+        if (!is_object($submittedData) && $type && gettype($submittedData) !== $type->getName()) {
             return false;
         }
 
@@ -143,14 +144,14 @@ class Accessor
      *
      * @return array<array-key, object|array>
      */
-    private function getExtraValues(array $originalValues, array $submittedValues): array
+    private function getExtraValues(callable $compare, array $originalValues, array $submittedValues): array
     {
         /** @var array<array-key, object|array> $extraValues */
         $extraValues = [];
         foreach ($submittedValues as $key => $value) {
             $searchKey = array_search($value, $originalValues, true);
 
-            if (false === $searchKey || $key !== $searchKey || !$this->isEqual($submittedValues[$searchKey], $value)) {
+            if (false === $searchKey || $key !== $searchKey || !$this->isEqual($compare, $submittedValues[$searchKey], $value)) {
                 $extraValues[$key] = $value;
             }
         }
@@ -162,9 +163,9 @@ class Accessor
      * @param mixed $first
      * @param mixed $second
      */
-    private function isEqual($first, $second): bool
+    private function isEqual(callable $compare, $first, $second): bool
     {
-        if ($first === $second) {
+        if ($compare($first, $second) === true) {
             return true;
         }
 
@@ -182,12 +183,15 @@ class Accessor
     /**
      * @template T
      *
-     * @psalm-param iterable<array-key, T> $iterable
+     * @psalm-param iterable<array-key, T>|null $iterable
      *
      * @psalm-return array<array-key, T>
      */
     private function iterableToArray($iterable): array
     {
+        if (null === $iterable) {
+            return [];
+        }
         if ($iterable instanceof Traversable) {
             return iterator_to_array($iterable, true);
         }

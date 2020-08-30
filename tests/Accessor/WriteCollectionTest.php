@@ -112,8 +112,8 @@ class WriteCollectionTest extends AbstractTypeTestCase
 
     private function callOnMock($mock, iterable $movies): void
     {
-        [$getter, $adder, $remover] = $this->getCallbacks();
-        $this->accessor->writeCollection($getter, $adder, $remover, $mock, $movies);
+        [$compare, $getter, $adder, $remover] = $this->getCallbacks();
+        $this->accessor->writeCollection($compare, $getter, $adder, $remover, $mock, $movies);
     }
 
     /**
@@ -122,6 +122,7 @@ class WriteCollectionTest extends AbstractTypeTestCase
     private function getCallbacks(): array
     {
         return [
+            fn($default, $submitted) => $default === $submitted,
             fn (User $user) => $user->getFavoriteMovies(),
             fn (Movie $movie, User $user) => $user->addFavoriteMovie($movie),
             fn (Movie $movie, User $user) => $user->removeFavoriteMovie($movie),
