@@ -54,11 +54,12 @@ class Accessor
     {
         /** @var array|object|null $originalValue */
         $originalValue = $this->read($getter, $data, false);
+        $reflection = new ReflectionFunction($updater);
         if ($this->isEqual($originalValue, $submittedData)) {
             return true;
         }
 
-        return $this->submit($data, $updater, $submittedData);
+        return $this->submit($data, $submittedData, $reflection);
     }
 
     /**
@@ -76,12 +77,14 @@ class Accessor
 
         $toAdd = $this->getExtraValues($originalValues, $submittedData);
         $toRemove = $this->getExtraValues($submittedData, $originalValues);
+        $adderReflection = new ReflectionFunction($adder);
+        $removerReflection = new ReflectionFunction($remover);
         foreach ($toAdd as $item) {
-            $this->submit($data, $adder, $item);
+            $this->submit($data, $item, $adderReflection);
 //            $adder($item, $data);
         }
         foreach ($toRemove as $item) {
-            $this->submit($data, $remover, $item);
+            $this->submit($data, $item, $removerReflection);
 //            $remover($item, $data);
         }
 
@@ -92,9 +95,8 @@ class Accessor
      * @param array|object|null $data
      * @param mixed $submittedData
      */
-    private function submit($data, Closure $callback, $submittedData): bool
+    private function submit($data, $submittedData, ReflectionFunction $reflection): bool
     {
-        $reflection = new ReflectionFunction($callback);
         $params = $reflection->getParameters();
 
         // if there are no params, do not make a call.
@@ -121,7 +123,7 @@ class Accessor
 
         // user doesn't need base data; form can still be submitted
         if (!$secondParam) {
-            $callback($submittedData);
+            $reflection->invoke($submittedData);
 
             return true;
         }
@@ -130,7 +132,7 @@ class Accessor
             return false;
         }
 
-        $callback($submittedData, $data);
+        $reflection->invoke($submittedData, $data);
 
         return true;
     }

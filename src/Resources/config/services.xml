@@ -7,13 +7,13 @@
     <services>
         <service id="strictify_form_mapper.mapper_extension" class="Strictify\FormMapper\Extension\MapperExtension">
             <argument type="service" id="strictify_form_mapper.comparator" />
-            <tag name="form.type_extension" priority="-100"
+            <tag name="form.type_extension" priority="0"
                  extended-type="Symfony\Component\Form\Extension\Core\Type\FormType"
                  extended_type="Symfony\Component\Form\Extension\Core\Type\FormType" />
         </service>
 
         <service id="strictify_form_mapper.factory_extension" class="Strictify\FormMapper\Extension\FactoryExtension">
-            <tag name="form.type_extension" priority="-101"
+            <tag name="form.type_extension" priority="1"
                  extended-type="Symfony\Component\Form\Extension\Core\Type\FormType"
                  extended_type="Symfony\Component\Form\Extension\Core\Type\FormType" />
         </service>
@@ -22,7 +22,7 @@
             <argument type="tagged_iterator" tag="strictify_form_mapper.comparator"/>
         </service>
 
-        <service id="strictify_form_mapper.comparator.date_type" class="Strictify\FormMapper\Service\Comparator\DateTimeComparator">
+        <service id="strictify_form_mapper.comparator.date_type" class="Strictify\FormMapper\Service\Comparator\DateTimeDataComparator">
             <tag name="strictify_form_mapper.comparator"/>
         </service>
 

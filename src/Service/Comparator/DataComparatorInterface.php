@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Service\Comparator;
 
-interface ComparatorInterface
+interface DataComparatorInterface
 {
     /**
      * @param mixed $first

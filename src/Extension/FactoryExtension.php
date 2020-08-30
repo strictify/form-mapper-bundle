@@ -30,10 +30,12 @@ class FactoryExtension extends AbstractTypeExtension
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefault('factory', null);
-        $resolver->addAllowedTypes('factory', ['null', Closure::class]);
+        $resolver->setDefaults([
+            'factory' => null,
+            'show_factory_error' => true,
+        ]);
 
-        $resolver->setDefault('show_factory_error', true);
+        $resolver->addAllowedTypes('factory', ['null', Closure::class]);
         $resolver->addAllowedTypes('show_factory_error', ['bool']);
 
         $resolver->setNormalizer('empty_data', function (Options $options, ?callable $default) {
@@ -100,6 +102,7 @@ class FactoryExtension extends AbstractTypeExtension
             return $value;
         }
 
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         if (gettype($value) !== $parameterType->getName()) {
             throw new MissingFactoryFieldException(sprintf('Invalid type for field "%s".', $name));
         }

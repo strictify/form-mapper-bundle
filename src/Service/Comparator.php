@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Service;
 
-use Strictify\FormMapper\Service\Comparator\ComparatorInterface;
+use Strictify\FormMapper\Service\Comparator\DataComparatorInterface;
 
-class Comparator implements AccessorInterface
+class Comparator implements ComparatorInterface
 {
     /**
-     * @var ComparatorInterface[]|iterable
+     * @psalm-var iterable<DataComparatorInterface>
      *
-     * @psalm-var iterable<array-key, ComparatorInterface>
+     * @var DataComparatorInterface[]|iterable
      */
     private $comparators;
 
     /**
-     * @psalm-param iterable<array-key, ComparatorInterface> $comparators
+     * @psalm-param iterable<DataComparatorInterface> $comparators
      */
     public function __construct(iterable $comparators)
     {

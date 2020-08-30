@@ -11,7 +11,7 @@ class Factory
 {
     public static function createComparator(): Comparator
     {
-        return new Comparator([new Comparator\DateTimeComparator()]);
+        return new Comparator([new Comparator\DateTimeDataComparator()]);
     }
 
     public static function createAccessor(): Accessor

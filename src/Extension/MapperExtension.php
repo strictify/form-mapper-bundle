@@ -36,11 +36,6 @@ class MapperExtension extends AbstractTypeExtension
         yield FormType::class;
     }
 
-    public function getExtendedType(): string
-    {
-        return FormType::class;
-    }
-
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $defaultMapper = $builder->getDataMapper();

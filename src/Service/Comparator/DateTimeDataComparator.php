@@ -6,7 +6,7 @@ namespace Strictify\FormMapper\Service\Comparator;
 
 use DateTimeInterface;
 
-class DateTimeComparator implements ComparatorInterface
+class DateTimeDataComparator implements DataComparatorInterface
 {
     public function isEqual($first, $second): bool
     {

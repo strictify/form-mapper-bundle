@@ -6,16 +6,16 @@ namespace Strictify\FormMapper\Tests\Service\Comparator;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
-use Strictify\FormMapper\Service\Comparator\DateTimeComparator;
+use Strictify\FormMapper\Service\Comparator\DateTimeDataComparator;
 
 class DateTimeComparatorTest extends TestCase
 {
-    private DateTimeComparator $comparator;
+    private DateTimeDataComparator $comparator;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->comparator = new DateTimeComparator();
+        $this->comparator = new DateTimeDataComparator();
     }
 
     public function testEqual(): void
