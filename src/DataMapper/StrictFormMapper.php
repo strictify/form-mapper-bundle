@@ -11,7 +11,7 @@ use Symfony\Component\Form\DataMapperInterface;
 use Symfony\Component\Form\Extension\Core\DataMapper\PropertyPathMapper;
 
 /**
- * @psalm-type O=array{compare: callable, get_value: ?Closure, update_value: Closure, add_value: Closure, remove_value: Closure, prototype?: bool}
+ * @psalm-type O=array{compare: callable, get_value: ?Closure, update_value: Closure, add_value: Closure, remove_value: Closure, prototype?: bool, use_collection_accessor: bool}
  *
  * @see Closure
  */
@@ -34,7 +34,7 @@ class StrictFormMapper implements DataMapperInterface
             /** @psalm-var O $options */
             $options = $form->getConfig()->getOptions();
             $getter = $options['get_value'];
-            $isCollection = $options['multiple'] ?? false;
+            $isCollection = $options['use_collection_accessor'];
 
             if (!$getter) {
                 $unmappedForms[] = $form;
@@ -55,7 +55,7 @@ class StrictFormMapper implements DataMapperInterface
             $options = $config->getOptions();
             $getter = $options['get_value'];
             $compare = $options['compare'];
-            $isCollection = $options['multiple'] ?? false;
+            $isCollection = $options['use_collection_accessor'];
 
             if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
                 $updater = $options['update_value'];

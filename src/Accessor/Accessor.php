@@ -114,9 +114,13 @@ class Accessor
             @trigger_error('Method "update_value" should have typehint for first parameter.');
         }
 
+        $typeOfSubmittedData = gettype($submittedData);
+        if ($typeOfSubmittedData === 'boolean') {
+            $typeOfSubmittedData = 'bool';
+        }
         // check type of first param; if not a match, don't make a call
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        if (!is_object($submittedData) && $type && gettype($submittedData) !== $type->getName()) {
+        if (!is_object($submittedData) && $type && $typeOfSubmittedData !== $type->getName()) {
             return false;
         }
 
