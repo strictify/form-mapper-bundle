@@ -16,7 +16,10 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Strictify\FormMapper\Exception\InvalidFactorySignatureException;
 use function gettype;
+use function array_keys;
+use function similar_text;
 use function iterator_to_array;
 use function sprintf;
 use function trigger_error;
@@ -88,7 +91,21 @@ class FactoryExtension extends AbstractTypeExtension
 
         $name = $parameter->getName();
         if (!$form->has($name)) {
-            throw new MissingFactoryFieldException(sprintf('Missing field "%s".', $name));
+            $bestMatch = 0;
+            $bestName = null;
+            $all = array_keys($form->all());
+            foreach ($all as $child) {
+                similar_text($child, $name, $percent);
+                if ($percent > $bestMatch) {
+                    $bestName = $child;
+                    $bestMatch = $percent;
+                }
+            }
+            $error = sprintf('Missing field "%s".', $name);
+            if ($bestName) {
+                $error .= sprintf('Did you mean "%s"?', $bestName);
+            }
+            throw new InvalidFactorySignatureException($error);
         }
 
         /** @psalm-var mixed $value */
