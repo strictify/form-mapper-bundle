@@ -7,10 +7,9 @@ namespace Strictify\FormMapper\Accessor;
 use Closure;
 use Traversable;
 use ReflectionFunction;
+use Strictify\FormMapper\VO\SubmittedData;
 use Strictify\FormMapper\Service\Comparator;
 use function count;
-use function gettype;
-use function trigger_error;
 use function iterator_to_array;
 
 class Accessor
@@ -48,12 +47,14 @@ class Accessor
 
     /**
      * @param mixed $data
+     * @param Closure|SubmittedData $getter
      * @param mixed $submittedData
      */
-    public function write(callable $compare, Closure $getter, Closure $updater, $data, $submittedData): bool
+    public function write(callable $compare, $getter, Closure $updater, $data, $submittedData): bool
     {
         /** @var array|object|null $originalValue */
-        $originalValue = $this->read($getter, $data, false);
+        $originalValue = $getter instanceof SubmittedData ? $getter->getStore() : $this->read($getter, $data, false);
+
         $reflection = new ReflectionFunction($updater);
         if ($this->isEqual($compare, $originalValue, $submittedData)) {
             return true;
@@ -64,14 +65,16 @@ class Accessor
 
     /**
      * @param mixed $data
+     * @param Closure|SubmittedData $getter
      * @param iterable<array-key, object|array> $submittedData
      * @param Closure(mixed, object|array|null): void $adder
      * @param Closure(mixed, object|array|null): void $remover
      */
-    public function writeCollection(callable $compare, Closure $getter, Closure $adder, Closure $remover, $data, iterable $submittedData): bool
+    public function writeCollection(callable $compare, $getter, Closure $adder, Closure $remover, $data, iterable $submittedData): bool
     {
         /** @var iterable<array-key, object|array> $originalValues */
-        $originalValues = $this->read($getter, $data, false);
+        $originalValues = $getter instanceof SubmittedData ? $getter->getStore() : $this->read($getter, $data, true);
+
         $originalValues = $this->iterableToArray($originalValues);
         $submittedData = $this->iterableToArray($submittedData);
 
@@ -82,11 +85,9 @@ class Accessor
 
         foreach ($toAdd as $item) {
             $this->submit($data, $item, $adderReflection);
-//            $adder($item, $data);
         }
         foreach ($toRemove as $item) {
             $this->submit($data, $item, $removerReflection);
-//            $remover($item, $data);
         }
 
         return true;
@@ -110,17 +111,9 @@ class Accessor
             return false;
         }
         $type = $firstParam->getType();
-        if (!$type) {
-            @trigger_error('Method "update_value" should have typehint for first parameter.');
-        }
 
-        $typeOfSubmittedData = gettype($submittedData);
-        if ($typeOfSubmittedData === 'boolean') {
-            $typeOfSubmittedData = 'bool';
-        }
-        // check type of first param; if not a match, don't make a call
-        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        if (!is_object($submittedData) && $type && $typeOfSubmittedData !== $type->getName()) {
+        // first param does not accept submitted null value; do not submit it
+        if (null === $submittedData && $type && !$type->allowsNull()) {
             return false;
         }
 

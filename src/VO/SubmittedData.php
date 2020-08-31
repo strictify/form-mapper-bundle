@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Strictify\FormMapper\VO;
+
+/**
+ * Used to avoid calling getter multiple times; first one when mapping from data to forms, send time when comparing default values with submitted values.
+ */
+class SubmittedData
+{
+    private bool $isSet = false;
+
+    /**
+     * @var mixed
+     */
+    private $store = null;
+
+    /**
+     * @return mixed
+     */
+    public function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * @param mixed $store
+     */
+    public function setStore($store): void
+    {
+        $this->store = $store;
+        $this->isSet = true;
+    }
+
+    public function isPopulated(): bool
+    {
+        return $this->isSet;
+    }
+}

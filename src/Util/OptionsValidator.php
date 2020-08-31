@@ -7,6 +7,10 @@ namespace Strictify\FormMapper\Util;
 use Closure;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
+/**
+ * @internal
+ * @psalm-internal Strictify\FormMapper
+ */
 class OptionsValidator
 {
     public static function validate(?Closure $updater, ?Closure $adder, ?Closure $remover, bool $isCollection): void

@@ -9,15 +9,14 @@ use Generator;
 use ReflectionFunction;
 use ReflectionParameter;
 use Strictify\FormMapper\Exception\FactoryExceptionInterface;
-use Strictify\FormMapper\Exception\MissingFactoryFieldException;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Strictify\FormMapper\Exception\MissingFactoryFieldException;
 use Strictify\FormMapper\Exception\InvalidFactorySignatureException;
-use function gettype;
 use function array_keys;
 use function similar_text;
 use function iterator_to_array;
@@ -34,7 +33,7 @@ class FactoryExtension extends AbstractTypeExtension
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'factory' => null,
+            'factory'            => null,
             'show_factory_error' => true,
         ]);
 
@@ -84,18 +83,18 @@ class FactoryExtension extends AbstractTypeExtension
      */
     private function getFormValue(FormInterface $form, ReflectionParameter $parameter)
     {
+        $name = $parameter->getName();
         $type = $parameter->getClass();
         if ($type && $type->implementsInterface(FormInterface::class)) {
             return $form;
         }
 
-        $name = $parameter->getName();
         if (!$form->has($name)) {
             $bestMatch = 0;
             $bestName = null;
             $all = array_keys($form->all());
             foreach ($all as $child) {
-                similar_text($child, $name, $percent);
+                similar_text((string)$child, $name, $percent);
                 if ($percent > $bestMatch) {
                     $bestName = $child;
                     $bestMatch = $percent;
@@ -111,16 +110,13 @@ class FactoryExtension extends AbstractTypeExtension
         /** @psalm-var mixed $value */
         $value = $form->get($name)->getData();
 
-        // if factory param is not typehinted, early exit. It is up to user to take care of it.
+        // if factory param is not typehinted, warn user about it.
         $parameterType = $parameter->getType();
         if (!$parameterType) {
             @trigger_error(sprintf('Factory parameter "%s" should be typehinted.', $name), E_USER_WARNING);
-
-            return $value;
         }
 
-        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        if (gettype($value) !== $parameterType->getName()) {
+        if (null === $value && $parameterType && !$parameterType->allowsNull()) {
             throw new MissingFactoryFieldException(sprintf('Invalid type for field "%s".', $name));
         }
 
