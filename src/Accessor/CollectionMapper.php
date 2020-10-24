@@ -82,6 +82,8 @@ class CollectionMapper extends AbstractMapper
             return false;
         }
 
+        $this->doCall($reflection, $submittedData, $data);
+        return true;
         try {
             $reflection->invoke($submittedData, $data);
         } catch (\Error $e) {

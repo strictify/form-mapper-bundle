@@ -10,11 +10,6 @@ use Symfony\Component\Form\FormInterface;
 
 class SingleValueMapper extends AbstractMapper
 {
-    public function read(array $options, $data, FormInterface $form)
-    {
-        return parent::read($options, $data, $form);
-    }
-
     public function update(array $options, &$data, FormInterface $form, ?Store $store): void
     {
         /** @psalm-var mixed $originalValue */
@@ -57,6 +52,6 @@ class SingleValueMapper extends AbstractMapper
         }
 
         // moment of truth
-        $reflection->invoke($submittedData, $data);
+        $this->doCall($reflection, $submittedData, $data);
     }
 }
