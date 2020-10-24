@@ -5,58 +5,60 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\DataMapper;
 
 use Closure;
+use Strictify\FormMapper\Types;
+use Strictify\FormMapper\Store;
 use Strictify\FormMapper\VO\SubmittedData;
-use Strictify\FormMapper\Accessor\Accessor;
 use Strictify\FormMapper\Service\Comparator;
 use Symfony\Component\Form\DataMapperInterface;
+use Strictify\FormMapper\Accessor\MapperInterface;
+use Strictify\FormMapper\Accessor\CollectionMapper;
+use Strictify\FormMapper\Accessor\SingleValueMapper;
 use Symfony\Component\Form\Extension\Core\DataMapper\PropertyPathMapper;
 
 /**
  * @see SubmittedData
  *
- * @psalm-type O=array{
- *      compare: callable,
- *      get_value: ?Closure,
- *      update_value: Closure,
- *      add_value: Closure,
- *      remove_value: Closure,
- *      prototype?: bool,
- *      _lazy_getter_values: SubmittedData,
- * }
+ * @psalm-import-type O from Types
  *
  * @see Closure
+ * @see Types
  */
 class StrictFormMapper implements DataMapperInterface
 {
     private DataMapperInterface $defaultMapper;
-    private Accessor $accessor;
+
+    private SingleValueMapper $singleValueMapper;
+    private CollectionMapper $collectionMapper;
+
+    /** @var array<Store> */
+    private array $cache = [];
 
     public function __construct(?DataMapperInterface $defaultMapper, Comparator $comparator)
     {
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->defaultMapper = $defaultMapper ?: new PropertyPathMapper();
-        $this->accessor = new Accessor($comparator);
+        $this->singleValueMapper = new SingleValueMapper($comparator);
+        $this->collectionMapper = new CollectionMapper($comparator);
     }
 
     public function mapDataToForms($data, $forms): void
     {
         $unmappedForms = [];
 
-        foreach ($forms as $form) {
+        foreach ($forms as $name => $form) {
             /** @psalm-var O $options */
             $options = $form->getConfig()->getOptions();
             $getter = $options['get_value'];
-            $isCollection = $this->isCollection($options);
 
             if (!$getter) {
                 $unmappedForms[] = $form;
                 continue;
             }
-            /** @var mixed $defaultData */
-            $defaultData = $this->accessor->read($getter, $data, $isCollection);
-            $options['_lazy_getter_values']->setStore($defaultData);
-
-            $form->setData($defaultData);
+            $accessor = $this->getAccessor($options);
+            /** @psalm-var mixed $value */
+            $value = $accessor->read($options, $data, $form);
+            $this->cache[$name] = new Store($value);
+            $form->setData($value);
         }
 
         $this->defaultMapper->mapDataToForms($data, $unmappedForms);
@@ -65,30 +67,39 @@ class StrictFormMapper implements DataMapperInterface
     public function mapFormsToData($forms, &$data): void
     {
         $unmappedForms = [];
-        foreach ($forms as $form) {
+        foreach ($forms as $name => $form) {
             $config = $form->getConfig();
             /** @psalm-var O $options */
             $options = $config->getOptions();
             $getter = $options['get_value'];
-            $compare = $options['compare'];
-            $isCollection = $this->isCollection($options);
-            /** @var SubmittedData $lazyGetter */
-            $lazyGetter = $options['_lazy_getter_values'];
 
             if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
-                $updater = $options['update_value'];
+                $accessor = $this->getAccessor($options);
 
-                $isCollection
-                    ? $this->accessor->writeCollection($compare, $lazyGetter, $options['add_value'], $options['remove_value'], $data, $form->getData())
-                    : $this->accessor->write($compare, $lazyGetter, $updater, $data, $form->getData());
+                $store = $this->cache[$name] ?? null;
+                $accessor->update($options, $data, $form, $store);
             } else {
                 $unmappedForms[] = $form;
             }
         }
 
         $this->defaultMapper->mapFormsToData($unmappedForms, $data);
+        $this->cache = [];
     }
 
+    /**
+     * @psalm-param O $options
+     */
+    private function getAccessor(array $options): MapperInterface
+    {
+        $isCollection = $this->isCollection($options);
+
+        return $isCollection ? $this->collectionMapper : $this->singleValueMapper;
+    }
+
+    /**
+     * @psalm-param O $options
+     */
     private function isCollection(array $options): bool
     {
         if (isset($options['multiple']) && true === $options['multiple']) {

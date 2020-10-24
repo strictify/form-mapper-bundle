@@ -12,6 +12,9 @@ use Strictify\FormMapper\Service\Comparator;
 use function count;
 use function iterator_to_array;
 
+/**
+ * @deprecated
+ */
 class Accessor
 {
     private Comparator $comparator;

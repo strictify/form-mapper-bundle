@@ -21,7 +21,6 @@ use function array_keys;
 use function similar_text;
 use function iterator_to_array;
 use function sprintf;
-use function trigger_error;
 
 class FactoryExtension extends AbstractTypeExtension
 {
@@ -110,12 +109,9 @@ class FactoryExtension extends AbstractTypeExtension
         /** @psalm-var mixed $value */
         $value = $form->get($name)->getData();
 
-        // if factory param is not typehinted, warn user about it.
         $parameterType = $parameter->getType();
-        if (!$parameterType) {
-            @trigger_error(sprintf('Factory parameter "%s" should be typehinted.', $name), E_USER_WARNING);
-        }
 
+        // if submitted data is null but typehinted parameter doesn't allow it, throw exception
         if (null === $value && $parameterType && !$parameterType->allowsNull()) {
             throw new MissingFactoryFieldException(sprintf('Invalid type for field "%s".', $name));
         }

@@ -6,21 +6,21 @@ namespace Strictify\FormMapper\Extension;
 
 use Closure;
 use ReflectionFunction;
-use Strictify\FormMapper\VO\SubmittedData;
-use Strictify\FormMapper\DataMapper\StrictFormMapper;
-use Strictify\FormMapper\Service\Comparator;
-use Symfony\Component\Form\AbstractTypeExtension;
-use Symfony\Component\Form\Extension\Core\Type\FormType;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\Options;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraint;
-use Symfony\Component\Validator\Constraints\NotNull;
+use Strictify\FormMapper\Service\Comparator;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Validator\Constraints\Type;
-use function array_map;
-use function array_merge;
-use function get_class;
+use Symfony\Component\Validator\Constraints\NotNull;
+use Strictify\FormMapper\DataMapper\StrictFormMapper;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use function in_array;
+use function array_map;
+use function get_class;
+use function array_merge;
 
 class MapperExtension extends AbstractTypeExtension
 {
@@ -46,49 +46,43 @@ class MapperExtension extends AbstractTypeExtension
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'get_value' => null,
-            'update_value' => null,
-            'add_value' => null,
-            'remove_value' => null,
-            'constraints' => [],
-            '_lazy_getter_values' => null,
-            'compare' =>
-                /**
-                 * @param mixed $defaultValue
-                 * @param mixed $submittedValue
-                 */
+            'get_value'    => null,
+            'update_value' => /** @param mixed $data */ function ($data) {
+                throw new MissingOptionsException('You have to create "update_value" callback.');
+            },
+            'add_value'    => /** @param mixed $data */ function ($data) {
+                throw new MissingOptionsException('You have to create "add_value" callback.');
+            },
+            'remove_value' => /** @param mixed $data */ function ($data) {
+                throw new MissingOptionsException('You have to create "remove_value" callback.');
+            },
+            'compare'      =>
+            /**
+             * @param mixed $defaultValue
+             * @param mixed $submittedValue
+             */
                 fn($defaultValue, $submittedValue) => $defaultValue === $submittedValue,
         ]);
         $resolver->setAllowedTypes('get_value', ['null', Closure::class]);
-        $resolver->setAllowedTypes('update_value', ['null', Closure::class]);
-        $resolver->setAllowedTypes('add_value', ['null', Closure::class]);
-        $resolver->setAllowedTypes('remove_value', ['null', Closure::class]);
+        $resolver->setAllowedTypes('update_value', [Closure::class]);
+        $resolver->setAllowedTypes('add_value', [Closure::class]);
+        $resolver->setAllowedTypes('remove_value', [Closure::class]);
         $resolver->setAllowedTypes('compare', ['callable']);
-//        $resolver->setAllowedTypes('use_collection_accessor', ['bool']);
 
-        $resolver->setNormalizer('constraints', fn (Options $options, array $constraints) => $this->normalizeConstraints($options, $constraints));
-        $resolver->setNormalizer('get_value', fn (Options $options, ?Closure $getter) => $this->validateAccessors($options, $getter));
-        $resolver->setNormalizer('_lazy_getter_values', fn (Options $options) => new SubmittedData());
+        $resolver->setNormalizer('constraints', fn(Options $options, array $constraints) => $this->normalizeConstraints($options, $constraints));
     }
 
-    private function validateAccessors(Options $options, ?Closure $getter): ?Closure
-    {
-        if (!$getter) {
-            return $getter;
-        }
-
-//        OptionsValidator::validate($options['update_value'], $options['add_value'], $options['remove_value'], $isCollection);
-
-        return $getter;
-    }
-
+    /**
+     * Reflect ``update_value`` and add NotNull/Type constraint if first parameter is typehinted and doesn't allow null value.
+     *
+     * So if user created callback like ``update_value => fn(string $name)``, this must have NotNull constraint.
+     *
+     * Otherwise, no validation will be displayed. Class-level annotation constraints don't apply because it could still be null (like factory failure).
+     */
     private function normalizeConstraints(Options $options, array $constraints): array
     {
-        /** @var Closure|null $updater */
+        /** @var Closure $updater */
         $updater = $options['update_value'];
-        if (!$updater) {
-            return $constraints;
-        }
 
         $reflection = new ReflectionFunction($updater);
         $params = $reflection->getParameters();
@@ -107,7 +101,7 @@ class MapperExtension extends AbstractTypeExtension
         $extraConstraints = [];
 
         // existing constraints
-        $constraintClasses = array_map(fn (Constraint $constraint) => get_class($constraint), $constraints);
+        $constraintClasses = array_map(fn(Constraint $constraint) => get_class($constraint), $constraints);
 
         // add NotNull constraint, if not already defined and param cannot be nullable
         if (!$type->allowsNull() && !in_array(NotNull::class, $constraintClasses, true)) {
