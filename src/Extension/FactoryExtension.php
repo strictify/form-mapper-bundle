@@ -8,6 +8,7 @@ use Closure;
 use Generator;
 use ReflectionFunction;
 use ReflectionParameter;
+use Doctrine\Instantiator\Instantiator;
 use Strictify\FormMapper\Exception\FactoryExceptionInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -42,7 +43,16 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->setNormalizer('empty_data', /** @param mixed $default */ function (Options $options, $default) {
             /** @var Closure|null $factory */
             $factory = $options['factory'];
+
+            // if user hasn't defined "factory", improve existing empty_data with Instantiator component; we need to skip constructor
             if (!$factory) {
+                $class = $options['data_class'];
+                if (null !== $class) {
+                    return function (FormInterface $form) use ($class) {
+                        return $form->isEmpty() && !$form->isRequired() ? null : (new Instantiator())->instantiate($class);
+                    };
+                }
+
                 return $default;
             }
             /** @var bool $showFactoryError */

@@ -8,6 +8,7 @@ use ReflectionFunction;
 use InvalidArgumentException;
 use Symfony\Component\Form\FormInterface;
 use Strictify\FormMapper\Service\Comparator;
+use function strpos;
 
 abstract class AbstractMapper implements MapperInterface
 {
@@ -23,26 +24,34 @@ abstract class AbstractMapper implements MapperInterface
      */
     public function read(array $options, $data, FormInterface $form)
     {
-        $getter = $options['get_value'];
-        if (!$getter) {
-            throw new InvalidArgumentException('You have to assign "get_value" callable.');
-        }
-        // we have data; make a call to getter
-        if (null !== $data) {
-            return $getter($data);
-        }
+        try {
+            $getter = $options['get_value'];
+            if (!$getter) {
+                throw new InvalidArgumentException('You have to assign "get_value" callable.');
+            }
+            // we have data; make a call to getter
+            if (null !== $data) {
+                return $getter($data);
+            }
 
-        $reflection = new ReflectionFunction($getter);
-        $params = $reflection->getParameters();
-        $firstParam = $params[0] ?? null;
-        // if no first param and no data, still make a call to getter; useful with `$builder->getData()` and arrow functions.
-        if (null === $firstParam) {
-            return $getter();
-        }
+            $reflection = new ReflectionFunction($getter);
+            $params = $reflection->getParameters();
+            $firstParam = $params[0] ?? null;
+            // if no first param and no data, still make a call to getter; useful with `$builder->getData()` and arrow functions.
+            if (null === $firstParam) {
+                return $getter();
+            }
 
-        // still no data (example: factory failure) but nullable is not allowed; return default as well
-        if ($firstParam->allowsNull()) {
-            return $getter(null);
+            // still no data (example: factory failure) but nullable is not allowed; return default as well
+            if ($firstParam->allowsNull()) {
+                return $getter(null);
+            }
+        } catch (\Error $e) {
+            $message = $e->getMessage();
+            if (strpos($message, 'must not be accessed before initialization') !== false) {
+                return null;
+            }
+            throw $e;
         }
     }
 

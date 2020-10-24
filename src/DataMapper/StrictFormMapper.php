@@ -75,7 +75,6 @@ class StrictFormMapper implements DataMapperInterface
 
             if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
                 $accessor = $this->getAccessor($options);
-
                 $store = $this->cache[$name] ?? null;
                 $accessor->update($options, $data, $form, $store);
             } else {

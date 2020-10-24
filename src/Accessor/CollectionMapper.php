@@ -7,6 +7,7 @@ namespace Strictify\FormMapper\Accessor;
 use ReflectionFunction;
 use Strictify\FormMapper\Store;
 use Symfony\Component\Form\FormInterface;
+use function strpos;
 use function is_array;
 use function array_search;
 
@@ -81,7 +82,15 @@ class CollectionMapper extends AbstractMapper
             return false;
         }
 
-        $reflection->invoke($submittedData, $data);
+        try {
+            $reflection->invoke($submittedData, $data);
+        } catch (\Error $e) {
+            $message = $e->getMessage();
+            if (strpos($message, 'must not be accessed before initialization') !== false) {
+                return false;
+            }
+            throw $e;
+        }
 
         return true;
     }
