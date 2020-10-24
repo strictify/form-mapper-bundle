@@ -46,6 +46,7 @@ class FactoryExtension extends AbstractTypeExtension
 
             // if user hasn't defined "factory", improve existing empty_data with Instantiator component; we need to skip constructor
             if (!$factory) {
+                /** @var string|null $class */
                 $class = $options['data_class'];
                 if (null !== $class) {
                     return function (FormInterface $form) use ($class) {
