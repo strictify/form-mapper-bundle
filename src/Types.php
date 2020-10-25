@@ -16,6 +16,7 @@ use Closure;
  *     multiple: bool,
  *     entry_type?: string,
  *     compare: Closure,
+ *     remove_entry: ?Closure,
  * }
  *
  * @see Closure

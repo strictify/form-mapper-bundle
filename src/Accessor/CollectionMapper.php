@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Accessor;
 
 use ReflectionFunction;
-use Strictify\FormMapper\Store;
 use Symfony\Component\Form\FormInterface;
-use function strpos;
 use function is_array;
 use function array_search;
 
@@ -24,7 +22,7 @@ class CollectionMapper extends AbstractMapper
         return $values;
     }
 
-    public function update(array $options, &$data, FormInterface $form, ?Store $store): void
+    public function update(array $options, &$data, FormInterface $form): void
     {
         $originalValues = $this->read($options, $data, $form);
         $submittedData = $form->getData();
@@ -40,7 +38,16 @@ class CollectionMapper extends AbstractMapper
         foreach ($toAdd as $item) {
             $this->submit($data, $item, $adderReflection);
         }
-        foreach ($toRemove as $item) {
+
+        $removeEntry = $options['entry_options']['remove_entry'] ?? null;
+        $removalCallback = $this->extractRemoveEntryFromCollection($form);
+        foreach ($toRemove as $key => $item) {
+            if ($removeEntry) {
+                $removeEntry($item);
+            }
+            if ($removalCallback) {
+                $removalCallback($item);
+            }
             $this->submit($data, $item, $removerReflection);
         }
     }
@@ -83,16 +90,6 @@ class CollectionMapper extends AbstractMapper
         }
 
         $this->doCall($reflection, $submittedData, $data);
-        return true;
-        try {
-            $reflection->invoke($submittedData, $data);
-        } catch (\Error $e) {
-            $message = $e->getMessage();
-            if (strpos($message, 'must not be accessed before initialization') !== false) {
-                return false;
-            }
-            throw $e;
-        }
 
         return true;
     }
@@ -110,11 +107,23 @@ class CollectionMapper extends AbstractMapper
         foreach ($submittedValues as $key => $value) {
             $searchKey = array_search($value, $originalValues, true);
 
-            if (false === $searchKey || $key !== $searchKey || !$this->isEqual($compare, $submittedValues[$searchKey], $value)) {
+            if (false === $searchKey || $key !== $searchKey || !$this->isEqual($compare, $originalValues[$searchKey], $value)) {
                 $extraValues[$key] = $value;
             }
         }
 
         return $extraValues;
+    }
+
+    private function extractRemoveEntryFromCollection(FormInterface $form): ?\Closure
+    {
+        foreach ($form as $child) {
+            $options = $child->getConfig()->getOptions();
+
+            return $options['remove_entry'] ?? null;
+        }
+
+        return null;
+
     }
 }

@@ -9,10 +9,10 @@ use Generator;
 use ReflectionFunction;
 use ReflectionParameter;
 use Doctrine\Instantiator\Instantiator;
+use Strictify\FormMapper\VO\SubmittedData;
 use Strictify\FormMapper\Exception\FactoryExceptionInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
-use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -35,6 +35,7 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->setDefaults([
             'factory'            => null,
             'show_factory_error' => true,
+            '_stored_data' => null,
         ]);
 
         $resolver->addAllowedTypes('factory', ['null', Closure::class]);
@@ -43,6 +44,8 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->setNormalizer('empty_data', /** @param mixed $default */ function (Options $options, $default) {
             /** @var Closure|null $factory */
             $factory = $options['factory'];
+            /** @var SubmittedData $store */
+            $store = $options['_stored_data'];
 
             // if user hasn't defined "factory", improve existing empty_data with Instantiator component; we need to skip constructor
             if (!$factory) {
@@ -56,25 +59,33 @@ class FactoryExtension extends AbstractTypeExtension
 
                 return $default;
             }
-            /** @var bool $showFactoryError */
-            $showFactoryError = $options['show_factory_error'];
 
-            return $this->createEmptyDataClosure($factory, $showFactoryError);
+            return $this->createEmptyDataClosure($factory, $store);
+        });
+
+        $resolver->setNormalizer('_stored_data', function (Options $options) {
+            return new SubmittedData();
         });
     }
 
-    private function createEmptyDataClosure(Closure $factory, bool $showFactoryError): Closure
+    private function createEmptyDataClosure(Closure $factory, SubmittedData $submittedData): Closure
     {
-        return function (FormInterface $form) use ($factory, $showFactoryError) {
+        return function (FormInterface $form) use ($factory, $submittedData) {
+            if (null !== $form->getData()) {
+                return $form->getData();
+            }
+            if ($submittedData->isPopulated()) {
+                return $submittedData->getStore();
+            }
             try {
                 $arguments = iterator_to_array($this->getFactoryArguments($form, $factory), false);
 
-                return $factory(...$arguments);
-            } catch (FactoryExceptionInterface $e) {
-                if ($showFactoryError) {
-                    $form->addError(new FormError($e->getMessage(), null, [], null, $e));
-                }
+                /** @psalm-var mixed $values */
+                $values = $factory(...$arguments);
+                $submittedData->setStore($values);
 
+                return $values;
+            } catch (FactoryExceptionInterface $e) {
                 return null;
             }
         };
@@ -97,6 +108,25 @@ class FactoryExtension extends AbstractTypeExtension
         $type = $parameter->getClass();
         if ($type && $type->implementsInterface(FormInterface::class)) {
             return $form;
+        }
+        if ($name === 'caller') {
+            $parent = $form->getParent();
+            if (!$parent) {
+                throw new MissingFactoryFieldException('No parent form.');
+            }
+            $grandParent = $parent->getParent();
+            if (!$grandParent) {
+                throw new MissingFactoryFieldException('No grandparent form.');
+            }
+            /** @var Closure $emptyData */
+            $emptyData = $grandParent->getConfig()->getOption('empty_data');
+            /** @psalm-var mixed $caller */
+            $caller = $emptyData($grandParent);
+            if (null === $caller && !$parameter->allowsNull()) {
+                throw new MissingFactoryFieldException('Called cannot be null.');
+            }
+
+            return $caller;
         }
 
         if (!$form->has($name)) {

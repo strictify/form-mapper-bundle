@@ -6,7 +6,6 @@ namespace Strictify\FormMapper\DataMapper;
 
 use Closure;
 use Strictify\FormMapper\Types;
-use Strictify\FormMapper\Store;
 use Strictify\FormMapper\VO\SubmittedData;
 use Strictify\FormMapper\Service\Comparator;
 use Symfony\Component\Form\DataMapperInterface;
@@ -30,9 +29,6 @@ class StrictFormMapper implements DataMapperInterface
     private SingleValueMapper $singleValueMapper;
     private CollectionMapper $collectionMapper;
 
-    /** @var array<Store> */
-    private array $cache = [];
-
     public function __construct(?DataMapperInterface $defaultMapper, Comparator $comparator)
     {
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
@@ -55,9 +51,9 @@ class StrictFormMapper implements DataMapperInterface
                 continue;
             }
             $accessor = $this->getAccessor($options);
+
             /** @psalm-var mixed $value */
             $value = $accessor->read($options, $data, $form);
-            $this->cache[$name] = new Store($value);
             $form->setData($value);
         }
 
@@ -75,15 +71,13 @@ class StrictFormMapper implements DataMapperInterface
 
             if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
                 $accessor = $this->getAccessor($options);
-                $store = $this->cache[$name] ?? null;
-                $accessor->update($options, $data, $form, $store);
+                $accessor->update($options, $data, $form);
             } else {
                 $unmappedForms[] = $form;
             }
         }
 
         $this->defaultMapper->mapFormsToData($unmappedForms, $data);
-        $this->cache = [];
     }
 
     /**

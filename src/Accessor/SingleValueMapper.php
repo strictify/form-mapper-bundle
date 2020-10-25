@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Accessor;
 
 use ReflectionFunction;
-use Strictify\FormMapper\Store;
 use Symfony\Component\Form\FormInterface;
 
 class SingleValueMapper extends AbstractMapper
 {
-    public function update(array $options, &$data, FormInterface $form, ?Store $store): void
+    public function update(array $options, &$data, FormInterface $form): void
     {
         /** @psalm-var mixed $originalValue */
         $originalValue = $this->read($options, $data, $form);

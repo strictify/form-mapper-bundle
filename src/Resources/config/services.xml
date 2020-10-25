@@ -18,6 +18,12 @@
                  extended_type="Symfony\Component\Form\Extension\Core\Type\FormType" />
         </service>
 
+        <service id="strictify_form_mapper.collection_extension" class="Strictify\FormMapper\Extension\RemoveEntryExtension">
+            <tag name="form.type_extension" priority="1"
+                 extended-type="Symfony\Component\Form\Extension\Core\Type\FormType"
+                 extended_type="Symfony\Component\Form\Extension\Core\Type\FormType" />
+        </service>
+
         <service id="strictify_form_mapper.comparator" class="Strictify\FormMapper\Service\Comparator">
             <argument type="tagged_iterator" tag="strictify_form_mapper.comparator"/>
         </service>

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Accessor;
 
 use Strictify\FormMapper\Types;
-use Strictify\FormMapper\Store;
 use Symfony\Component\Form\FormInterface;
 
 /**
@@ -27,5 +26,5 @@ interface MapperInterface
      * @psalm-param O $options
      * @psalm-param mixed $data
      */
-    public function update(array $options, &$data, FormInterface $form, ?Store $store): void;
+    public function update(array $options, &$data, FormInterface $form): void;
 }

@@ -50,12 +50,8 @@ class MapperExtension extends AbstractTypeExtension
             'update_value' => /** @param mixed $data */ function ($data) {
                 throw new MissingOptionsException('You have to create "update_value" callback.');
             },
-            'add_value'    => /** @param mixed $data */ function ($data) {
-                throw new MissingOptionsException('You have to create "add_value" callback.');
-            },
-            'remove_value' => /** @param mixed $data */ function ($data) {
-                throw new MissingOptionsException('You have to create "remove_value" callback.');
-            },
+            'add_value'    => fn() => null,
+            'remove_value' => fn() => null,
             'compare'      =>
             /**
              * @param mixed $defaultValue
@@ -65,8 +61,8 @@ class MapperExtension extends AbstractTypeExtension
         ]);
         $resolver->setAllowedTypes('get_value', ['null', Closure::class]);
         $resolver->setAllowedTypes('update_value', [Closure::class]);
-        $resolver->setAllowedTypes('add_value', [Closure::class]);
-        $resolver->setAllowedTypes('remove_value', [Closure::class]);
+        $resolver->setAllowedTypes('add_value', [Closure::class, 'null']);
+        $resolver->setAllowedTypes('remove_value', [Closure::class, 'null']);
         $resolver->setAllowedTypes('compare', ['callable']);
 
         $resolver->setNormalizer('constraints', fn(Options $options, array $constraints) => $this->normalizeConstraints($options, $constraints));
