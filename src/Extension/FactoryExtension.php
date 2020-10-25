@@ -9,19 +9,19 @@ use Generator;
 use ReflectionFunction;
 use ReflectionParameter;
 use Doctrine\Instantiator\Instantiator;
-use Strictify\FormMapper\VO\SubmittedData;
-use Strictify\FormMapper\Exception\FactoryExceptionInterface;
-use Symfony\Component\Form\AbstractTypeExtension;
-use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormInterface;
+use Strictify\FormMapper\VO\SubmittedData;
 use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Strictify\FormMapper\Exception\FactoryExceptionInterface;
 use Strictify\FormMapper\Exception\MissingFactoryFieldException;
 use Strictify\FormMapper\Exception\InvalidFactorySignatureException;
+use function sprintf;
 use function array_keys;
 use function similar_text;
 use function iterator_to_array;
-use function sprintf;
 
 class FactoryExtension extends AbstractTypeExtension
 {
@@ -35,7 +35,6 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->setDefaults([
             'factory'            => null,
             'show_factory_error' => true,
-            '_stored_data' => null,
         ]);
 
         $resolver->addAllowedTypes('factory', ['null', Closure::class]);
@@ -45,7 +44,6 @@ class FactoryExtension extends AbstractTypeExtension
             /** @var Closure|null $factory */
             $factory = $options['factory'];
             /** @var SubmittedData $store */
-            $store = $options['_stored_data'];
 
             // if user hasn't defined "factory", improve existing empty_data with Instantiator component; we need to skip constructor
             if (!$factory) {
@@ -60,31 +58,29 @@ class FactoryExtension extends AbstractTypeExtension
                 return $default;
             }
 
-            return $this->createEmptyDataClosure($factory, $store);
-        });
-
-        $resolver->setNormalizer('_stored_data', function (Options $options) {
-            return new SubmittedData();
+            return $this->createEmptyDataClosure($factory);
         });
     }
 
-    private function createEmptyDataClosure(Closure $factory, SubmittedData $submittedData): Closure
+    private function createEmptyDataClosure(Closure $factory): Closure
     {
-        return function (FormInterface $form) use ($factory, $submittedData) {
-            if (null !== $form->getData()) {
-                return $form->getData();
+        return function (FormInterface $form) use ($factory) {
+            // we store the value of `empty_data` result. Multiple calls will return same result, thus preventing creation of multiple entities
+            // it is important because of `parent`; look for this string under
+            static $data = null;
+
+            if ($data !== null) {
+                return $data;
             }
-            if ($submittedData->isPopulated()) {
-                return $submittedData->getStore();
+            if (null !== $data = $form->getData()) {
+                return $data;
             }
             try {
                 $arguments = iterator_to_array($this->getFactoryArguments($form, $factory), false);
-
                 /** @psalm-var mixed $values */
-                $values = $factory(...$arguments);
-                $submittedData->setStore($values);
+                $data = $factory(...$arguments);
 
-                return $values;
+                return $data;
             } catch (FactoryExceptionInterface $e) {
                 return null;
             }
@@ -109,24 +105,21 @@ class FactoryExtension extends AbstractTypeExtension
         if ($type && $type->implementsInterface(FormInterface::class)) {
             return $form;
         }
-        if ($name === 'caller') {
+        // special name; this will retrieve data of parent class (although technically it is grandparent)
+        if ($name === 'parent') {
             $parent = $form->getParent();
-            if (!$parent) {
+            if (!$parent || !$grandParent = $parent->getParent()) {
                 throw new MissingFactoryFieldException('No parent form.');
-            }
-            $grandParent = $parent->getParent();
-            if (!$grandParent) {
-                throw new MissingFactoryFieldException('No grandparent form.');
             }
             /** @var Closure $emptyData */
             $emptyData = $grandParent->getConfig()->getOption('empty_data');
             /** @psalm-var mixed $caller */
-            $caller = $emptyData($grandParent);
-            if (null === $caller && !$parameter->allowsNull()) {
-                throw new MissingFactoryFieldException('Called cannot be null.');
+            $parentData = $emptyData($grandParent);
+            if (null === $parentData && !$parameter->allowsNull()) {
+                throw new MissingFactoryFieldException('Parent cannot be null.');
             }
 
-            return $caller;
+            return $parentData;
         }
 
         if (!$form->has($name)) {
