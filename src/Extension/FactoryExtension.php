@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\Extension;
 
 use Closure;
-use Generator;
 use ReflectionFunction;
 use ReflectionParameter;
 use Doctrine\Instantiator\Instantiator;
@@ -21,7 +20,6 @@ use Strictify\FormMapper\Exception\InvalidFactorySignatureException;
 use function sprintf;
 use function array_keys;
 use function similar_text;
-use function iterator_to_array;
 
 class FactoryExtension extends AbstractTypeExtension
 {
@@ -76,7 +74,7 @@ class FactoryExtension extends AbstractTypeExtension
                 return $data;
             }
             try {
-                $arguments = iterator_to_array($this->getFactoryArguments($form, $factory), false);
+                $arguments = $this->getFactoryArguments($form, $factory);
                 /** @psalm-var mixed $values */
                 $data = $factory(...$arguments);
 
@@ -87,16 +85,19 @@ class FactoryExtension extends AbstractTypeExtension
         };
     }
 
-    private function getFactoryArguments(FormInterface $form, Closure $factory): Generator
+    private function getFactoryArguments(FormInterface $form, Closure $factory): array
     {
+        $arguments = [];
         $reflection = new ReflectionFunction($factory);
         foreach ($reflection->getParameters() as $parameter) {
-            yield $this->getFormValue($form, $parameter);
+            $arguments[] = $this->getFormValue($form, $parameter);
         }
+        
+        return $arguments;
     }
 
     /**
-     * @return mixed|FormInterface
+     * @return mixed
      */
     private function getFormValue(FormInterface $form, ReflectionParameter $parameter)
     {
