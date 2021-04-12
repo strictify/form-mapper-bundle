@@ -105,7 +105,8 @@ class CollectionMapper extends AbstractMapper
         /** @var array<array-key, object|array> $extraValues */
         $extraValues = [];
         foreach ($submittedValues as $key => $value) {
-            $searchKey = array_search($value, $originalValues, true);
+//            $searchKey = array_search($value, $originalValues, true);
+            $searchKey = $this->search($compare, $key, $value, $originalValues);
 
             if (false === $searchKey || $key !== $searchKey || !$this->isEqual($compare, $originalValues[$searchKey], $value)) {
                 $extraValues[$key] = $value;
@@ -113,6 +114,17 @@ class CollectionMapper extends AbstractMapper
         }
 
         return $extraValues;
+    }
+
+    private function search(callable $compare, $key, $value, $originalValues)
+    {
+        foreach ($originalValues as $originalKey => $originalValue) {
+            if ($value && $originalValue && $compare($value, $originalValue, $key, $originalKey) === true) {
+                return $key;
+            }
+        }
+
+        return false;
     }
 
     private function extractRemoveEntryFromCollection(FormInterface $form): ?\Closure
