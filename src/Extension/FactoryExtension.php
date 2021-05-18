@@ -7,9 +7,7 @@ namespace Strictify\FormMapper\Extension;
 use Closure;
 use ReflectionFunction;
 use ReflectionParameter;
-use Doctrine\Instantiator\Instantiator;
 use Symfony\Component\Form\FormInterface;
-use Strictify\FormMapper\VO\SubmittedData;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -38,29 +36,15 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->addAllowedTypes('factory', ['null', Closure::class]);
         $resolver->addAllowedTypes('show_factory_error', ['bool']);
 
-        $resolver->setNormalizer('empty_data', /** @param mixed $default */ function (Options $options, $default) {
+        $resolver->setNormalizer('empty_data', /** @param mixed $default */ function (Options $options, mixed $default) {
             /** @var Closure|null $factory */
             $factory = $options['factory'];
-            /** @var SubmittedData $store */
 
-            // if user hasn't defined "factory", improve existing empty_data with Instantiator component; we need to skip constructor
-            if (!$factory) {
-                /** @var string|null $class */
-                $class = $options['data_class'];
-                if (null !== $class) {
-                    return function (FormInterface $form) use ($class) {
-                        return $form->isEmpty() && !$form->isRequired() ? null : (new Instantiator())->instantiate($class);
-                    };
-                }
-
-                return $default;
-            }
-
-            return $this->createEmptyDataClosure($factory);
+            return $factory ? $this->createEmptyDataWrapper($factory) : $default;
         });
     }
 
-    private function createEmptyDataClosure(Closure $factory): Closure
+    private function createEmptyDataWrapper(Closure $factory): Closure
     {
         return function (FormInterface $form) use ($factory) {
             // we store the value of `empty_data` result. Multiple calls will return same result, thus preventing creation of multiple entities
@@ -79,7 +63,7 @@ class FactoryExtension extends AbstractTypeExtension
                 $data = $factory(...$arguments);
 
                 return $data;
-            } catch (FactoryExceptionInterface $e) {
+            } catch (FactoryExceptionInterface) {
                 return null;
             }
         };
@@ -92,7 +76,7 @@ class FactoryExtension extends AbstractTypeExtension
         foreach ($reflection->getParameters() as $parameter) {
             $arguments[] = $this->getFormValue($form, $parameter);
         }
-        
+
         return $arguments;
     }
 
@@ -106,39 +90,10 @@ class FactoryExtension extends AbstractTypeExtension
         if ($type && $type->implementsInterface(FormInterface::class)) {
             return $form;
         }
-        // special name; this will retrieve data of parent class (although technically it is grandparent)
-        if ($name === 'parent') {
-            $parent = $form->getParent();
-            if (!$parent || !$grandParent = $parent->getParent()) {
-                throw new MissingFactoryFieldException('No parent form.');
-            }
-            /** @var Closure $emptyData */
-            $emptyData = $grandParent->getConfig()->getOption('empty_data');
-            /** @psalm-var mixed $caller */
-            $parentData = $emptyData($grandParent);
-            if (null === $parentData && !$parameter->allowsNull()) {
-                throw new MissingFactoryFieldException('Parent cannot be null.');
-            }
 
-            return $parentData;
-        }
-
+        // Factory parameter is not submitted, or there is a typo; try to find best match and throw exception.
         if (!$form->has($name)) {
-            $bestMatch = 0;
-            $bestName = null;
-            $all = array_keys($form->all());
-            foreach ($all as $child) {
-                similar_text((string)$child, $name, $percent);
-                if ($percent > $bestMatch) {
-                    $bestName = $child;
-                    $bestMatch = $percent;
-                }
-            }
-            $error = sprintf('Missing field "%s".', $name);
-            if ($bestName) {
-                $error .= sprintf('Did you mean "%s"?', $bestName);
-            }
-            throw new InvalidFactorySignatureException($error);
+            throw $this->createInvalidFactorySignatureException($form, $name);
         }
 
         /** @psalm-var mixed $value */
@@ -152,5 +107,25 @@ class FactoryExtension extends AbstractTypeExtension
         }
 
         return $value;
+    }
+
+    private function createInvalidFactorySignatureException(FormInterface $form, string $name): InvalidFactorySignatureException
+    {
+        $bestMatch = 0;
+        $bestName = null;
+        $all = array_keys($form->all());
+        foreach ($all as $child) {
+            similar_text((string)$child, $name, $percent);
+            if ($percent > $bestMatch) {
+                $bestName = $child;
+                $bestMatch = $percent;
+            }
+        }
+        $error = sprintf('Missing field "%s".', $name);
+        if ($bestName) {
+            $error .= sprintf(' Did you mean "%s"?', $bestName);
+        }
+
+        return new InvalidFactorySignatureException($error);
     }
 }

@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Tests\Extension\Mapper;
 
-use Strictify\FormMapper\Accessor\Accessor;
+use Symfony\Component\Form\FormInterface;
+use Strictify\FormMapper\Tests\Fixture\Entity\User;
 use Strictify\FormMapper\Tests\AbstractTypeTestCase;
 use Strictify\FormMapper\Tests\Fixture\Entity\Movie;
-use Strictify\FormMapper\Tests\Fixture\Entity\User;
-use Strictify\FormMapper\Tests\Fixture\Factory;
-use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
-use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 
 class CollectionTest extends AbstractTypeTestCase
 {
-    private Accessor $accessor;
     private Movie $dieHard;
     private Movie $pulpFiction;
     private User $user;
@@ -23,8 +20,6 @@ class CollectionTest extends AbstractTypeTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->accessor = Factory::createAccessor();
-
         $this->dieHard = new Movie('Die Hard');
         $this->pulpFiction = new Movie('Pulp fiction');
         $this->user = new User('Bruce', 'Willis', [$this->dieHard, $this->pulpFiction]);

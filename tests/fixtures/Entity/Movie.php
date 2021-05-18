@@ -6,11 +6,8 @@ namespace Strictify\FormMapper\Tests\Fixture\Entity;
 
 class Movie
 {
-    private string $name;
-
-    public function __construct(string $name)
+    public function __construct(private string $name)
     {
-        $this->name = $name;
     }
 
     public function __toString()

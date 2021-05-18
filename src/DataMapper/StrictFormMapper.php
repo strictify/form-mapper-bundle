@@ -6,16 +6,14 @@ namespace Strictify\FormMapper\DataMapper;
 
 use Closure;
 use Strictify\FormMapper\Types;
-use Strictify\FormMapper\VO\SubmittedData;
 use Strictify\FormMapper\Service\Comparator;
 use Symfony\Component\Form\DataMapperInterface;
 use Strictify\FormMapper\Accessor\MapperInterface;
 use Strictify\FormMapper\Accessor\CollectionMapper;
 use Strictify\FormMapper\Accessor\SingleValueMapper;
-use Symfony\Component\Form\Extension\Core\DataMapper\PropertyPathMapper;
+use Symfony\Component\Form\Extension\Core\DataMapper\DataMapper;
 
 /**
- * @see SubmittedData
  *
  * @psalm-import-type O from Types
  *
@@ -31,8 +29,7 @@ class StrictFormMapper implements DataMapperInterface
 
     public function __construct(?DataMapperInterface $defaultMapper, Comparator $comparator)
     {
-        /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
-        $this->defaultMapper = $defaultMapper ?: new PropertyPathMapper();
+        $this->defaultMapper = $defaultMapper ?: new DataMapper();
         $this->singleValueMapper = new SingleValueMapper($comparator);
         $this->collectionMapper = new CollectionMapper($comparator);
     }

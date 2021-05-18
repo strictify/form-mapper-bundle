@@ -9,7 +9,6 @@ namespace Strictify\FormMapper\VO;
  */
 class SubmittedData
 {
-
     private bool $isSet = false;
 
     /**

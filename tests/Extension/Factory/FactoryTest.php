@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Tests\Extension\Factory;
 
-use Closure;
-use Strictify\FormMapper\Tests\AbstractTypeTestCase;
+use stdClass;
+use TypeError;
 use Strictify\FormMapper\Tests\Fixture\Entity\User;
-use Symfony\Component\Form\Extension\Core\Type\FormType;
-use Symfony\Component\Form\FormInterface;
+use Strictify\FormMapper\Tests\AbstractTypeTestCase;
 
 class FactoryTest extends AbstractTypeTestCase
 {
@@ -31,6 +30,7 @@ class FactoryTest extends AbstractTypeTestCase
         $form = $this->createUserForm();
         $form->submit(['firstName' => 'Bruce', 'lastName' => null]);
         self::assertFalse($form->isValid());
+        self::assertNull($form->getData());
     }
 
     /**
@@ -43,31 +43,15 @@ class FactoryTest extends AbstractTypeTestCase
         self::assertFalse($form->isValid());
     }
 
-    public function testFormInterfaceIsInjected(): void
-    {
-        $factory = fn (FormInterface $form, string $lastName) => new User($form->get('firstName')->getData(), $lastName);
-        $form = $this->createUserForm($factory);
-        $form->submit(['firstName' => 'Bruce', 'lastName' => 'Wick']);
-        self::assertTrue($form->isValid());
-    }
-
     /**
-     * This test if just for factory, accessors are irrelevant.
+     * Assert that incorrect type submitted will trigger TypeError exception, instead of converting it to validation error.
+     *
+     * Users have to use static analysis.
      */
-    private function createUserForm(?Closure $factory = null): FormInterface
+    public function testTypeErrorException(): void
     {
-        if (!$factory) {
-            $factory = fn (string $firstName, string $lastName) => new User($firstName, $lastName);
-        }
-        $builder = $this->factory->createBuilder(FormType::class, null, ['factory' => $factory]);
-        $builder->add('firstName', null, [
-            'mapped' => false,
-        ]);
-
-        $builder->add('lastName', null, [
-            'mapped' => false,
-        ]);
-
-        return $builder->getForm();
+        $this->expectException(TypeError::class);
+        $form = $this->createUserForm();
+        $form->submit(['firstName' => 'Bruce', 'lastName' => new stdClass()]);
     }
 }

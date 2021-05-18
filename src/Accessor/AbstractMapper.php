@@ -13,11 +13,8 @@ use function strpos;
 
 abstract class AbstractMapper implements MapperInterface
 {
-    protected Comparator $comparator;
-
-    public function __construct(Comparator $comparator)
+    public function __construct(protected Comparator $comparator)
     {
-        $this->comparator = $comparator;
     }
 
     /**
@@ -75,11 +72,10 @@ abstract class AbstractMapper implements MapperInterface
             return $reflectionFunction->invoke(...$values);
         } catch (Error $e) {
             $message = $e->getMessage();
-            if (strpos($message, 'must not be accessed before initialization') !== false) {
+            if (str_contains($message, 'must not be accessed before initialization')) {
                 return null;
             }
             throw $e;
         }
-
     }
 }

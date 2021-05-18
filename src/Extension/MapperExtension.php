@@ -47,9 +47,7 @@ class MapperExtension extends AbstractTypeExtension
     {
         $resolver->setDefaults([
             'get_value'    => null,
-            'update_value' => /** @param mixed $data */ function ($data) {
-                throw new MissingOptionsException('You have to create "update_value" callback.');
-            },
+            'update_value' => /** @param mixed $data */ fn ($data) => throw new MissingOptionsException('You have to create "update_value" callback.'),
             'add_value'    => fn() => null,
             'remove_value' => fn() => null,
             'compare'      =>

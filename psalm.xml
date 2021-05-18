@@ -11,10 +11,10 @@
         xmlns="https://getpsalm.org/schema/config"
         xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
-    
-<!--    <stubs>-->
-<!--        <file name="stubs/Options.php"/>-->
-<!--    </stubs>-->
+
+    <!--    <stubs>-->
+    <!--        <file name="stubs/Options.php"/>-->
+    <!--    </stubs>-->
 
     <projectFiles>
         <directory name="src"/>
@@ -48,4 +48,8 @@
 
         <MissingClosureReturnType errorLevel="suppress"/>
     </issueHandlers>
+
+    <plugins>
+        <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
+    </plugins>
 </psalm>

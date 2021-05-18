@@ -10,6 +10,9 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<Movie>
+ */
 class MovieType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -26,8 +29,6 @@ class MovieType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefault('factory', function (string $name) {
-            return new Movie($name);
-        });
+        $resolver->setDefault('factory', fn(string $name) => new Movie($name));
     }
 }

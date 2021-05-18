@@ -8,18 +8,15 @@ use function array_search;
 
 class User
 {
-    private string $firstName;
-    private string $lastName;
-
-    /** @var array<Movie> */
-    private array $favoriteMovies;
-
     /** @param Movie[] $favoriteMovies */
-    public function __construct(string $firstName, string $lastName, array $favoriteMovies = [])
+    public function __construct(
+        private string $firstName,
+        private string $lastName,
+        private array $favoriteMovies = [],
+        private bool $isActive = true,
+        private ?string $email = null,
+    )
     {
-        $this->firstName = $firstName;
-        $this->lastName = $lastName;
-        $this->favoriteMovies = $favoriteMovies;
     }
 
     public function getFirstName(): string
@@ -60,5 +57,25 @@ class User
             return;
         }
         unset($this->favoriteMovies[$key]);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): void
+    {
+        $this->isActive = $isActive;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): void
+    {
+        $this->email = $email;
     }
 }
