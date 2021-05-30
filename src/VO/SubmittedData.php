@@ -10,11 +10,7 @@ namespace Strictify\FormMapper\VO;
 class SubmittedData
 {
     private bool $isSet = false;
-
-    /**
-     * @var mixed
-     */
-    private $store = null;
+    private mixed $store = null;
 
     /**
      * @return mixed
@@ -24,10 +20,7 @@ class SubmittedData
         return $this->store;
     }
 
-    /**
-     * @param mixed $store
-     */
-    public function setStore($store): void
+    public function setStore(mixed $store): void
     {
         $this->store = $store;
         $this->isSet = true;

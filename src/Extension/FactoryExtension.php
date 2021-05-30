@@ -15,6 +15,7 @@ use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Strictify\FormMapper\Exception\FactoryExceptionInterface;
 use Strictify\FormMapper\Exception\MissingFactoryFieldException;
 use Strictify\FormMapper\Exception\InvalidFactorySignatureException;
+use function is_a;
 use function sprintf;
 use function array_keys;
 use function similar_text;
@@ -36,7 +37,7 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->addAllowedTypes('factory', ['null', Closure::class]);
         $resolver->addAllowedTypes('show_factory_error', ['bool']);
 
-        $resolver->setNormalizer('empty_data', /** @param mixed $default */ function (Options $options, mixed $default) {
+        $resolver->setNormalizer('empty_data', function (Options $options, $default) {
             /** @var Closure|null $factory */
             $factory = $options['factory'];
 
@@ -47,22 +48,10 @@ class FactoryExtension extends AbstractTypeExtension
     private function createEmptyDataWrapper(Closure $factory): Closure
     {
         return function (FormInterface $form) use ($factory) {
-            // we store the value of `empty_data` result. Multiple calls will return same result, thus preventing creation of multiple entities
-            // it is important because of `parent`; look for this string under
-            static $data = null;
-
-            if ($data !== null) {
-                return $data;
-            }
-            if (null !== $data = $form->getData()) {
-                return $data;
-            }
             try {
                 $arguments = $this->getFactoryArguments($form, $factory);
-                /** @psalm-var mixed $values */
-                $data = $factory(...$arguments);
 
-                return $data;
+                return $factory(...$arguments);
             } catch (FactoryExceptionInterface) {
                 return null;
             }
@@ -81,13 +70,15 @@ class FactoryExtension extends AbstractTypeExtension
     }
 
     /**
-     * @return mixed
+     * Get form value based on parameter name.
+     *
+     * If typehint of parameter is FormInterface, then return form itself; name doesn't matter.
      */
-    private function getFormValue(FormInterface $form, ReflectionParameter $parameter)
+    private function getFormValue(FormInterface $form, ReflectionParameter $parameter): mixed
     {
         $name = $parameter->getName();
-        $type = $parameter->getClass();
-        if ($type && $type->implementsInterface(FormInterface::class)) {
+        $type = $parameter->getType()?->getName();
+        if ($type && is_a($type, FormInterface::class, true)) {
             return $form;
         }
 
@@ -98,11 +89,15 @@ class FactoryExtension extends AbstractTypeExtension
 
         /** @psalm-var mixed $value */
         $value = $form->get($name)->getData();
-
         $parameterType = $parameter->getType();
 
+        // parameter is not typehinted, we don't care about what happens next, it is up to user and static analysis
+        if (!$parameterType) {
+            return $value;
+        }
+
         // if submitted data is null but typehinted parameter doesn't allow it, throw exception
-        if (null === $value && $parameterType && !$parameterType->allowsNull()) {
+        if (null === $value && !$parameterType->allowsNull()) {
             throw new MissingFactoryFieldException(sprintf('Invalid type for field "%s".', $name));
         }
 

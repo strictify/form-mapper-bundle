@@ -6,7 +6,7 @@ namespace Strictify\FormMapper\Exception;
 
 use RuntimeException;
 
-class InvalidFactorySignatureException extends RuntimeException
+class InvalidFactorySignatureException extends RuntimeException implements FactoryExceptionInterface
 {
 
 }

@@ -16,8 +16,9 @@ class FactoryTest extends AbstractTypeTestCase
         $form = $this->createUserForm();
         $form->submit(['firstName' => 'Bruce', 'lastName' => 'Willis']);
         self::assertTrue($form->isValid());
-        /** @var User $user */
+
         $user = $form->getData();
+        self::assertInstanceOf(User::class, $user);
         self::assertEquals('Bruce', $user->getFirstName());
         self::assertEquals('Willis', $user->getLastName());
     }

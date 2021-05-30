@@ -7,17 +7,21 @@ namespace Strictify\FormMapper\Accessor;
 use Error;
 use ReflectionFunction;
 use InvalidArgumentException;
+use Strictify\FormMapper\Store;
 use Symfony\Component\Form\FormInterface;
 use Strictify\FormMapper\Service\Comparator;
-use function strpos;
 
 abstract class AbstractMapper implements MapperInterface
 {
+    private ?Store $cachedOriginalValues = null;
+
     public function __construct(protected Comparator $comparator)
     {
     }
 
     /**
+     * @param mixed $data
+     *
      * @return mixed
      */
     public function read(array $options, $data, FormInterface $form)

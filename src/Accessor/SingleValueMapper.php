@@ -11,9 +11,7 @@ class SingleValueMapper extends AbstractMapper
 {
     public function update(array $options, &$data, FormInterface $form): void
     {
-        /** @psalm-var mixed $originalValue */
         $originalValue = $this->read($options, $data, $form);
-        /** @psalm-var mixed $submittedData */
         $submittedData = $form->getData();
         $compare = $options['compare'];
         $updater = $options['update_value'];
@@ -31,9 +29,9 @@ class SingleValueMapper extends AbstractMapper
             return;
         }
         $firstParameterType = $firstParam->getType();
-
+        $allowsNull = $firstParameterType?->allowsNull() ?? false;
         // first param does not accept submitted null value; do not call updater
-        if (null === $submittedData && $firstParameterType && !$firstParameterType->allowsNull()) {
+        if (null === $submittedData && $allowsNull) {
             return;
         }
         $secondParam = $params[1] ?? null;

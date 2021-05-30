@@ -14,7 +14,6 @@ use Strictify\FormMapper\Accessor\SingleValueMapper;
 use Symfony\Component\Form\Extension\Core\DataMapper\DataMapper;
 
 /**
- *
  * @psalm-import-type O from Types
  *
  * @see Closure
@@ -23,9 +22,11 @@ use Symfony\Component\Form\Extension\Core\DataMapper\DataMapper;
 class StrictFormMapper implements DataMapperInterface
 {
     private DataMapperInterface $defaultMapper;
-
     private SingleValueMapper $singleValueMapper;
     private CollectionMapper $collectionMapper;
+
+    /** @var array<string, MapperInterface> */
+    private array $cachedMappers = [];
 
     public function __construct(?DataMapperInterface $defaultMapper, Comparator $comparator)
     {
@@ -34,7 +35,7 @@ class StrictFormMapper implements DataMapperInterface
         $this->collectionMapper = new CollectionMapper($comparator);
     }
 
-    public function mapDataToForms($data, $forms): void
+    public function mapDataToForms($viewData, $forms): void
     {
         $unmappedForms = [];
 
@@ -47,19 +48,20 @@ class StrictFormMapper implements DataMapperInterface
                 $unmappedForms[] = $form;
                 continue;
             }
-            $accessor = $this->getAccessor($options);
+            $accessor = $this->getAccessor($options, $name);
 
             /** @psalm-var mixed $value */
-            $value = $accessor->read($options, $data, $form);
+            $value = $accessor->read($options, $viewData, $form);
             $form->setData($value);
         }
 
-        $this->defaultMapper->mapDataToForms($data, $unmappedForms);
+        $this->defaultMapper->mapDataToForms($viewData, $unmappedForms);
     }
 
-    public function mapFormsToData($forms, &$data): void
+    public function mapFormsToData($forms, &$viewData): void
     {
         $unmappedForms = [];
+
         foreach ($forms as $name => $form) {
             $config = $form->getConfig();
             /** @psalm-var O $options */
@@ -67,20 +69,28 @@ class StrictFormMapper implements DataMapperInterface
             $getter = $options['get_value'];
 
             if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
-                $accessor = $this->getAccessor($options);
-                $accessor->update($options, $data, $form);
+                $accessor = $this->getAccessor($options, $name);
+                $accessor->update($options, $viewData, $form);
             } else {
                 $unmappedForms[] = $form;
             }
         }
 
-        $this->defaultMapper->mapFormsToData($unmappedForms, $data);
+        $this->defaultMapper->mapFormsToData($unmappedForms, $viewData);
     }
 
     /**
      * @psalm-param O $options
      */
-    private function getAccessor(array $options): MapperInterface
+    private function getAccessor(array $options, string $name): MapperInterface
+    {
+        return $this->cachedMappers[$name] ??= $this->doGetAccessor($options);
+    }
+
+    /**
+     * @psalm-param O $options
+     */
+    private function doGetAccessor(array $options): MapperInterface
     {
         $isCollection = $this->isCollection($options);
 

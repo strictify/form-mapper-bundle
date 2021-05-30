@@ -8,9 +8,13 @@ use Symfony\Component\Form\FormInterface;
 use Strictify\FormMapper\Tests\Fixture\Factory;
 use Strictify\FormMapper\Tests\Fixture\Entity\User;
 use Strictify\FormMapper\Tests\AbstractTypeTestCase;
+use Strictify\FormMapper\Accessor\SingleValueMapper;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
+/**
+ * @see SingleValueMapper
+ */
 class SingleValueMapperTest extends AbstractTypeTestCase
 {
     /**

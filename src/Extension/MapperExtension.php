@@ -24,11 +24,8 @@ use function array_merge;
 
 class MapperExtension extends AbstractTypeExtension
 {
-    private Comparator $comparator;
-
-    public function __construct(Comparator $comparator)
+    public function __construct(private Comparator $comparator)
     {
-        $this->comparator = $comparator;
     }
 
     public static function getExtendedTypes(): iterable
@@ -47,7 +44,7 @@ class MapperExtension extends AbstractTypeExtension
     {
         $resolver->setDefaults([
             'get_value'    => null,
-            'update_value' => /** @param mixed $data */ fn ($data) => throw new MissingOptionsException('You have to create "update_value" callback.'),
+            'update_value' => fn ($data) => throw new MissingOptionsException('You have to create "update_value" callback.'),
             'add_value'    => fn() => null,
             'remove_value' => fn() => null,
             'compare'      =>

@@ -9,7 +9,6 @@ namespace Strictify\FormMapper;
  */
 class Store
 {
-
     /** @psalm-var T */
     private $value;
 
