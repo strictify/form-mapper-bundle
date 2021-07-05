@@ -31,7 +31,7 @@ class SingleValueMapper extends AbstractMapper
         $firstParameterType = $firstParam->getType();
         $allowsNull = $firstParameterType?->allowsNull() ?? false;
         // first param does not accept submitted null value; do not call updater
-        if (null === $submittedData && $allowsNull) {
+        if (null === $submittedData && !$allowsNull) {
             return;
         }
         $secondParam = $params[1] ?? null;
