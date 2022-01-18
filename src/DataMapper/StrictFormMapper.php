@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Strictify\FormMapper\DataMapper;
 
 use Closure;
+use ArrayObject;
 use Strictify\FormMapper\Types;
 use Strictify\FormMapper\Service\Comparator;
 use Symfony\Component\Form\DataMapperInterface;
@@ -55,7 +56,7 @@ class StrictFormMapper implements DataMapperInterface
             $form->setData($value);
         }
 
-        $this->defaultMapper->mapDataToForms($viewData, $unmappedForms);
+        $this->defaultMapper->mapDataToForms($viewData, new ArrayObject($unmappedForms));
     }
 
     public function mapFormsToData($forms, &$viewData): void
@@ -76,7 +77,7 @@ class StrictFormMapper implements DataMapperInterface
             }
         }
 
-        $this->defaultMapper->mapFormsToData($unmappedForms, $viewData);
+        $this->defaultMapper->mapFormsToData(new ArrayObject($unmappedForms), $viewData);
     }
 
     /**
