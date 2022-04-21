@@ -14,6 +14,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Strictify\FormMapper\Exception\FactoryExceptionInterface;
 use Strictify\FormMapper\Exception\MissingFactoryFieldException;
+use Symfony\Component\Form\Exception\TransformationFailedException;
 use Strictify\FormMapper\Exception\InvalidFactorySignatureException;
 use function is_a;
 use function sprintf;
@@ -52,6 +53,8 @@ class FactoryExtension extends AbstractTypeExtension
                 $arguments = $this->getFactoryArguments($form, $factory);
 
                 return $factory(...$arguments);
+            } catch (InvalidFactorySignatureException $e) {
+                throw new TransformationFailedException(invalidMessage: $e->getMessage());
             } catch (FactoryExceptionInterface) {
                 return null;
             }
