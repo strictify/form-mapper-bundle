@@ -102,12 +102,17 @@ class MapperExtension extends AbstractTypeExtension
             $extraConstraints[] = new NotNull();
         }
 
+        // 'data' is a reserved word
         if (!in_array(Type::class, $constraintClasses, true)) {
             $typeName = match (true) {
                 $type instanceof ReflectionUnionType => array_map(static fn(ReflectionNamedType $reflectionNamedType) => $reflectionNamedType->getName(), $type->getTypes()),
                 $type instanceof ReflectionNamedType => $type->getName(),
+                default => null,
             };
-            $extraConstraints[] = new Type(['type' => $typeName]);
+            // we don't care about `mixed` type; static analysis will take care of it
+            if ($typeName && $typeName !== 'mixed') {
+                $extraConstraints[] = new Type(['type' => $typeName]);
+            }
         }
 
         // these extra constraints must be executed first
