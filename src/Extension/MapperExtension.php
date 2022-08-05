@@ -77,11 +77,8 @@ class MapperExtension extends AbstractTypeExtension
         if (!$firstParam = $params[0] ?? null) {
             return $constraints;
         }
-
-        $type = $firstParam->getType();
-
         // first param is not typehinted, do not add extra constraints
-        if (!$type) {
+        if (!$reflectionType = $firstParam->getType()) {
             return $constraints;
         }
 
@@ -91,17 +88,17 @@ class MapperExtension extends AbstractTypeExtension
         $constraintClasses = array_map(static fn(Constraint $constraint) => get_class($constraint), $constraints);
 
         // add NotNull constraint, if not already defined and param is not nullable
-        if (!$type->allowsNull() && !in_array(NotNull::class, $constraintClasses, true)) {
+        if (!$reflectionType->allowsNull() && !in_array(NotNull::class, $constraintClasses, true)) {
             $extraConstraints[] = new NotNull();
         }
 
         if (!in_array(Type::class, $constraintClasses, true)) {
             $typeName = match (true) {
-                $type instanceof ReflectionUnionType => array_map(static fn(ReflectionNamedType $reflectionNamedType) => $reflectionNamedType->getName(), $type->getTypes()),
-                $type instanceof ReflectionNamedType => $type->getName(),
+                $reflectionType instanceof ReflectionUnionType => array_map(static fn(ReflectionNamedType $reflectionNamedType) => $reflectionNamedType->getName(), $reflectionType->getTypes()),
+                $reflectionType instanceof ReflectionNamedType => $reflectionType->getName(),
                 default => null,
             };
-            // we don't care about `mixed` type; static analysis will take care of it
+            // we don't want validation of `mixed` type; static analysis will take care of it
             if ($typeName && $typeName !== 'mixed') {
                 $extraConstraints[] = new Type(['type' => $typeName]);
             }

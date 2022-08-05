@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Accessor;
 
-use Closure;
 use ReflectionFunction;
 use Symfony\Component\Form\FormInterface;
 use function is_array;
-use function array_search;
 
 class CollectionMapper extends AbstractMapper
 {
@@ -53,19 +51,14 @@ class CollectionMapper extends AbstractMapper
     {
         $params = $reflection->getParameters();
 
-        // if there are no params, do not make a call.
-        if (0 === count($params)) {
-            return false;
-        }
         // if closure doesn't have params, it is equivalent of mapped: false but only for writer
-        $firstParam = $params[0] ?? null;
-        if (!$firstParam) {
+        if (!$firstParam = $params[0] ?? null) {
             return false;
         }
-        $type = $firstParam->getType();
+        $reflectionType = $firstParam->getType();
 
-        // first param does not accept submitted null value; do not submit it
-        if (null === $submittedData && $type && !$type->allowsNull()) {
+        // first param does not accept null value; do not submit it
+        if (null === $submittedData && $reflectionType && !$reflectionType->allowsNull()) {
             return false;
         }
 
