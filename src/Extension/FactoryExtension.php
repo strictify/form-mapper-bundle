@@ -124,9 +124,9 @@ class FactoryExtension extends AbstractTypeExtension
                 $bestMatch = $percent;
             }
         }
-        $error = sprintf('Missing field "%s".', $name);
+        $error = sprintf('Missing field \'%s\'.', $name);
         if ($bestName) {
-            $error .= sprintf(' Did you mean "%s"?', $bestName);
+            $error .= sprintf(' Did you mean \'%s\'?', $bestName);
         }
 
         return new InvalidFactorySignatureException($error);

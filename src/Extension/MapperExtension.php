@@ -49,12 +49,7 @@ class MapperExtension extends AbstractTypeExtension
             'update_value' => fn(mixed $data) => throw new MissingOptionsException('You have to create "update_value" callback.'),
             'add_value'    => fn() => null,
             'remove_value' => fn() => null,
-            'compare'      =>
-            /**
-             * @param mixed $defaultValue
-             * @param mixed $submittedValue
-             */
-                fn($defaultValue, $submittedValue) => $defaultValue === $submittedValue,
+            'compare'      => fn(mixed $defaultValue, mixed $submittedValue) => $defaultValue === $submittedValue,
         ]);
         $resolver->setAllowedTypes('get_value', ['null', Closure::class]);
         $resolver->setAllowedTypes('update_value', [Closure::class]);
@@ -79,11 +74,9 @@ class MapperExtension extends AbstractTypeExtension
 
         $reflection = new ReflectionFunction($updater);
         $params = $reflection->getParameters();
-        if (0 === count($params)) {
+        if (!$firstParam = $params[0] ?? null) {
             return $constraints;
         }
-
-        $firstParam = $params[0];
 
         $type = $firstParam->getType();
 
@@ -97,12 +90,11 @@ class MapperExtension extends AbstractTypeExtension
         // existing constraints
         $constraintClasses = array_map(static fn(Constraint $constraint) => get_class($constraint), $constraints);
 
-        // add NotNull constraint, if not already defined and param cannot be nullable
+        // add NotNull constraint, if not already defined and param is not nullable
         if (!$type->allowsNull() && !in_array(NotNull::class, $constraintClasses, true)) {
             $extraConstraints[] = new NotNull();
         }
 
-        // 'data' is a reserved word
         if (!in_array(Type::class, $constraintClasses, true)) {
             $typeName = match (true) {
                 $type instanceof ReflectionUnionType => array_map(static fn(ReflectionNamedType $reflectionNamedType) => $reflectionNamedType->getName(), $type->getTypes()),
