@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Strictify\FormMapper\Accessor;
 
+use Closure;
 use ReflectionFunction;
 use Symfony\Component\Form\FormInterface;
 use function is_array;
@@ -41,7 +42,7 @@ class CollectionMapper extends AbstractMapper
 
         $removeEntry = $options['entry_options']['remove_entry'] ?? null;
         $removalCallback = $this->extractRemoveEntryFromCollection($form);
-        foreach ($toRemove as $key => $item) {
+        foreach ($toRemove as $item) {
             if ($removeEntry) {
                 $removeEntry($item);
             }
@@ -52,11 +53,7 @@ class CollectionMapper extends AbstractMapper
         }
     }
 
-    /**
-     * @param mixed $data
-     * @param mixed $submittedData
-     */
-    private function submit($data, $submittedData, ReflectionFunction $reflection): bool
+    private function submit(mixed $data, mixed $submittedData, ReflectionFunction $reflection): bool
     {
         $params = $reflection->getParameters();
 
@@ -116,7 +113,7 @@ class CollectionMapper extends AbstractMapper
         return $extraValues;
     }
 
-    private function search(callable $compare, $key, $value, $originalValues)
+    private function search(callable $compare, int|string $key, object|array $value, object|array $originalValues): false|int|string
     {
         foreach ($originalValues as $originalKey => $originalValue) {
             if ($value && $originalValue && $compare($value, $originalValue, $key, $originalKey) === true) {
@@ -127,7 +124,7 @@ class CollectionMapper extends AbstractMapper
         return false;
     }
 
-    private function extractRemoveEntryFromCollection(FormInterface $form): ?\Closure
+    private function extractRemoveEntryFromCollection(FormInterface $form): ?Closure
     {
         foreach ($form as $child) {
             $options = $child->getConfig()->getOptions();
@@ -136,6 +133,5 @@ class CollectionMapper extends AbstractMapper
         }
 
         return null;
-
     }
 }

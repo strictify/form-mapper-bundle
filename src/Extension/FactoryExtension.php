@@ -39,14 +39,16 @@ class FactoryExtension extends AbstractTypeExtension
         $resolver->addAllowedTypes('factory', ['null', Closure::class]);
         $resolver->addAllowedTypes('show_factory_error', ['bool']);
 
-        $resolver->setNormalizer('empty_data', function (Options $options, $default) {
-            /** @var Closure|null $factory */
+        $resolver->setNormalizer('empty_data', function (Options $options, mixed $default) {
             $factory = $options['factory'];
 
-            return $factory ? $this->createEmptyDataWrapper($factory) : $default;
+            return $factory instanceof Closure ? $this->createEmptyDataWrapper($factory) : $default;
         });
     }
 
+    /**
+     * @return Closure(FormInterface)
+     */
     private function createEmptyDataWrapper(Closure $factory): Closure
     {
         return function (FormInterface $form) use ($factory) {

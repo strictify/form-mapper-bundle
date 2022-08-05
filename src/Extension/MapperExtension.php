@@ -6,6 +6,8 @@ namespace Strictify\FormMapper\Extension;
 
 use Closure;
 use ReflectionFunction;
+use ReflectionUnionType;
+use ReflectionNamedType;
 use Symfony\Component\Validator\Constraint;
 use Strictify\FormMapper\Service\Comparator;
 use Symfony\Component\OptionsResolver\Options;
@@ -44,7 +46,7 @@ class MapperExtension extends AbstractTypeExtension
     {
         $resolver->setDefaults([
             'get_value'    => null,
-            'update_value' => fn ($data) => throw new MissingOptionsException('You have to create "update_value" callback.'),
+            'update_value' => fn(mixed $data) => throw new MissingOptionsException('You have to create "update_value" callback.'),
             'add_value'    => fn() => null,
             'remove_value' => fn() => null,
             'compare'      =>
@@ -84,6 +86,7 @@ class MapperExtension extends AbstractTypeExtension
         $firstParam = $params[0];
 
         $type = $firstParam->getType();
+
         // first param is not typehinted, do not add extra constraints
         if (!$type) {
             return $constraints;
@@ -100,7 +103,11 @@ class MapperExtension extends AbstractTypeExtension
         }
 
         if (!in_array(Type::class, $constraintClasses, true)) {
-            $extraConstraints[] = new Type(['type' => $type->getName()]);
+            $typeName = match (true) {
+                $type instanceof ReflectionUnionType => array_map(static fn(ReflectionNamedType $reflectionNamedType) => $reflectionNamedType->getName(), $type->getTypes()),
+                $type instanceof ReflectionNamedType => $type->getName(),
+            };
+            $extraConstraints[] = new Type(['type' => $typeName]);
         }
 
         // these extra constraints must be executed first
