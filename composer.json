@@ -32,8 +32,8 @@
         "symfony/phpunit-bridge": "^4.0",
         "symfony/var-dumper": "^4.0",
         "symplify/easy-coding-standard": "^9",
-        "vimeo/psalm": "dev-master",
-        "psalm/plugin-symfony": "^2.2"
+        "vimeo/psalm": "4.x-dev",
+        "psalm/plugin-symfony": "dev-master"
     },
     "autoload": {
         "psr-4": {

@@ -87,7 +87,7 @@ class FactoryExtension extends AbstractTypeExtension
 
         // Factory parameter is not submitted, or there is a typo; try to find best match and throw exception.
         if (!$form->has($name)) {
-            throw $this->createInvalidFactorySignatureException($form, $name);
+            return $parameter->isOptional() ? $parameter->getDefaultValue() : throw $this->createInvalidFactorySignatureException($form, $name);
         }
 
         /** @psalm-var mixed $value */

@@ -3,7 +3,6 @@
         useDocblockPropertyTypes="false"
         resolveFromConfigFile="true"
         addParamDefaultToDocblockType="false"
-        allowPhpStormGenerics="true"
         findUnusedCode="false"
         findUnusedVariablesAndParams="false"
         reportMixedIssues="false"

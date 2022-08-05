@@ -92,7 +92,7 @@ class MapperExtension extends AbstractTypeExtension
         $extraConstraints = [];
 
         // existing constraints
-        $constraintClasses = array_map(fn(Constraint $constraint) => get_class($constraint), $constraints);
+        $constraintClasses = array_map(static fn(Constraint $constraint) => get_class($constraint), $constraints);
 
         // add NotNull constraint, if not already defined and param cannot be nullable
         if (!$type->allowsNull() && !in_array(NotNull::class, $constraintClasses, true)) {
