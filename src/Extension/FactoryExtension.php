@@ -7,6 +7,7 @@ namespace Strictify\FormMapper\Extension;
 use Closure;
 use ReflectionFunction;
 use ReflectionParameter;
+use ReflectionNamedType;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\Form\AbstractTypeExtension;
@@ -80,19 +81,21 @@ class FactoryExtension extends AbstractTypeExtension
     private function getFormValue(FormInterface $form, ReflectionParameter $parameter): mixed
     {
         $name = $parameter->getName();
-        $type = $parameter->getType()?->getName();
-        if ($type && is_a($type, FormInterface::class, true)) {
-            return $form;
+        $parameterType = $parameter->getType();
+        if ($parameterType instanceof ReflectionNamedType) {
+            $typeName = $parameterType->getName();
+            if (is_a($typeName, FormInterface::class, true)) {
+                return $form;
+            }
         }
 
-        // Factory parameter is not submitted, or there is a typo; try to find best match and throw exception.
+        // Factory parameter is not submitted; return default value (if provided) or report error with best-matched name
         if (!$form->has($name)) {
             return $parameter->isOptional() ? $parameter->getDefaultValue() : throw $this->createInvalidFactorySignatureException($form, $name);
         }
 
         /** @psalm-var mixed $value */
         $value = $form->get($name)->getData();
-        $parameterType = $parameter->getType();
 
         // parameter is not typehinted, we don't care about what happens next, it is up to user and static analysis
         if (!$parameterType) {
