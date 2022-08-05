@@ -41,13 +41,9 @@ class CollectionMapper extends AbstractMapper
         }
 
         $removeEntry = $options['entry_options']['remove_entry'] ?? null;
-        $removalCallback = $this->extractRemoveEntryFromCollection($form);
         foreach ($toRemove as $item) {
             if ($removeEntry) {
                 $removeEntry($item);
-            }
-            if ($removalCallback) {
-                $removalCallback($item);
             }
             $this->submit($data, $item, $removerReflection);
         }
@@ -122,16 +118,5 @@ class CollectionMapper extends AbstractMapper
         }
 
         return false;
-    }
-
-    private function extractRemoveEntryFromCollection(FormInterface $form): ?Closure
-    {
-        foreach ($form as $child) {
-            $options = $child->getConfig()->getOptions();
-
-            return $options['remove_entry'] ?? null;
-        }
-
-        return null;
     }
 }
