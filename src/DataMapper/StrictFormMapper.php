@@ -43,7 +43,7 @@ class StrictFormMapper implements DataMapperInterface
         foreach ($forms as $name => $form) {
             /** @psalm-var O $options */
             $options = $form->getConfig()->getOptions();
-            $getter = $options['get_value'];
+            $getter = $options['get_value'] ?? null;
 
             if (!$getter) {
                 $unmappedForms[] = $form;
@@ -67,7 +67,7 @@ class StrictFormMapper implements DataMapperInterface
             $config = $form->getConfig();
             /** @psalm-var O $options */
             $options = $config->getOptions();
-            $getter = $options['get_value'];
+            $getter = $options['get_value'] ?? null;
 
             if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
                 $accessor = $this->getAccessor($options, $name);
