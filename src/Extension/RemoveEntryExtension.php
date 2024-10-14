@@ -10,6 +10,9 @@ use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 
+/**
+ * @extends AbstractTypeExtension<void>
+ */
 class RemoveEntryExtension extends AbstractTypeExtension
 {
     public static function getExtendedTypes(): iterable

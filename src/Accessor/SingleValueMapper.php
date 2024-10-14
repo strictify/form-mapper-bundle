@@ -9,7 +9,7 @@ use Symfony\Component\Form\FormInterface;
 
 class SingleValueMapper extends AbstractMapper
 {
-    public function update(array $options, &$data, FormInterface $form): void
+    public function update(array $options, mixed &$data, FormInterface $form): void
     {
         $originalValue = $this->read($options, $data, $form);
         $submittedData = $form->getData();

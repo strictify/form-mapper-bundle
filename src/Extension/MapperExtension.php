@@ -22,8 +22,12 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use function in_array;
 use function array_map;
 use function get_class;
+use function is_string;
 use function array_merge;
 
+/**
+ * @extends AbstractTypeExtension<void>
+ */
 class MapperExtension extends AbstractTypeExtension
 {
     public function __construct(private Comparator $comparator)
@@ -45,11 +49,11 @@ class MapperExtension extends AbstractTypeExtension
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'get_value'    => null,
+            'get_value' => null,
             'update_value' => fn(mixed $data) => throw new MissingOptionsException('You have to create "update_value" callback.'),
-            'add_value'    => fn() => null,
+            'add_value' => fn() => null,
             'remove_value' => fn() => null,
-            'compare'      => fn(mixed $defaultValue, mixed $submittedValue) => $defaultValue === $submittedValue,
+            'compare' => fn(mixed $defaultValue, mixed $submittedValue) => $defaultValue === $submittedValue,
         ]);
         $resolver->setAllowedTypes('get_value', ['null', Closure::class]);
         $resolver->setAllowedTypes('update_value', [Closure::class]);
@@ -98,8 +102,9 @@ class MapperExtension extends AbstractTypeExtension
                 $reflectionType instanceof ReflectionNamedType => $reflectionType->getName(),
                 default => null,
             };
+
             // we don't want validation of `mixed` type; static analysis will take care of it
-            if ($typeName && $typeName !== 'mixed') {
+            if (is_string($typeName) && $typeName !== 'mixed') {
                 $extraConstraints[] = new Type(['type' => $typeName]);
             }
         }

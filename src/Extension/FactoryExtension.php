@@ -22,6 +22,9 @@ use function sprintf;
 use function array_keys;
 use function similar_text;
 
+/**
+ * @extends AbstractTypeExtension<void>
+ */
 class FactoryExtension extends AbstractTypeExtension
 {
     public static function getExtendedTypes(): iterable
@@ -32,7 +35,7 @@ class FactoryExtension extends AbstractTypeExtension
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'factory'            => null,
+            'factory' => null,
             'show_factory_error' => true,
         ]);
 
@@ -125,7 +128,7 @@ class FactoryExtension extends AbstractTypeExtension
             }
         }
         $error = sprintf('Missing field \'%s\'.', $name);
-        if ($bestName) {
+        if (null !== $bestName) {
             $error .= sprintf(' Did you mean \'%s\'?', $bestName);
         }
 

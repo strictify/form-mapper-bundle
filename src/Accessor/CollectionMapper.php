@@ -7,6 +7,7 @@ namespace Strictify\FormMapper\Accessor;
 use ReflectionFunction;
 use Symfony\Component\Form\FormInterface;
 use function is_array;
+use function is_callable;
 
 class CollectionMapper extends AbstractMapper
 {
@@ -21,7 +22,7 @@ class CollectionMapper extends AbstractMapper
         return $values;
     }
 
-    public function update(array $options, &$data, FormInterface $form): void
+    public function update(array $options, mixed &$data, FormInterface $form): void
     {
         $originalValues = $this->read($options, $data, $form);
         $submittedData = $form->getData();
@@ -40,7 +41,7 @@ class CollectionMapper extends AbstractMapper
 
         $removeEntry = $options['entry_options']['remove_entry'] ?? null;
         foreach ($toRemove as $item) {
-            if ($removeEntry) {
+            if (is_callable($removeEntry)) {
                 $removeEntry($item);
             }
             $this->submit($data, $item, $removerReflection);

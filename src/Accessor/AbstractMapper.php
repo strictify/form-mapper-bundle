@@ -19,12 +19,7 @@ abstract class AbstractMapper implements MapperInterface
     {
     }
 
-    /**
-     * @param mixed $data
-     *
-     * @return mixed
-     */
-    public function read(array $options, $data, FormInterface $form)
+    public function read(array $options, mixed $data, FormInterface $form): mixed
     {
         $getter = $options['get_value'];
         if (!$getter) {
@@ -52,11 +47,7 @@ abstract class AbstractMapper implements MapperInterface
         return null;
     }
 
-    /**
-     * @param mixed $first
-     * @param mixed $second
-     */
-    protected function isEqual(callable $compare, $first, $second): bool
+    protected function isEqual(callable $compare, mixed $first, mixed $second): bool
     {
         if ($compare($first, $second) === true) {
             return true;

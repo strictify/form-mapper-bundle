@@ -23,8 +23,8 @@
         "roave/security-advisories": "dev-latest",
         "symfony/phpunit-bridge": "^5.0|^6.0|^7.0",
         "symfony/var-dumper": "*",
-        "vimeo/psalm": "^4",
-        "psalm/plugin-symfony": "dev-master"
+        "vimeo/psalm": "^5",
+        "psalm/plugin-symfony": "^5"
     },
     "autoload": {
         "psr-4": {

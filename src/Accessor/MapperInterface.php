@@ -17,14 +17,12 @@ interface MapperInterface
     /**
      * @psalm-param O $options
      * @psalm-param mixed $data
-     *
-     * @return mixed
      */
-    public function read(array $options, $data, FormInterface $form);
+    public function read(array $options, mixed $data, FormInterface $form): mixed;
 
     /**
      * @psalm-param O $options
      * @psalm-param mixed $data
      */
-    public function update(array $options, &$data, FormInterface $form): void;
+    public function update(array $options, mixed &$data, FormInterface $form): void;
 }

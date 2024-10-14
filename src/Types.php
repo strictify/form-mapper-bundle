@@ -17,6 +17,7 @@ use Closure;
  *     entry_type?: string,
  *     compare: Closure,
  *     remove_entry: ?Closure,
+ *     ...
  * }
  *
  * @psalm-type D=array<mixed>|object|null
