@@ -95,7 +95,7 @@ class CollectionMapper extends AbstractMapper
 //            $searchKey = array_search($value, $originalValues, true);
             $searchKey = $this->search($compare, $key, $value, $originalValues);
 
-            if (false === $searchKey || $key !== $searchKey || !$this->isEqual($compare, $originalValues[$searchKey], $value)) {
+            if (false === $searchKey || $key !== $searchKey || !$this->isEqual($compare, $originalValues[$searchKey] ?? null, $value)) {
                 $extraValues[$key] = $value;
             }
         }
