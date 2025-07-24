@@ -62,7 +62,7 @@ class MapperExtension extends AbstractTypeExtension
         $resolver->setAllowedTypes('remove_value', [Closure::class, 'null']);
         $resolver->setAllowedTypes('compare', ['callable']);
 
-        $resolver->setNormalizer('constraints', fn(Options $options, array|object $constraints) => $this->normalizeConstraints($options, $constraints));
+        $resolver->addNormalizer('constraints', fn(Options $options, array|object $constraints) => $this->normalizeConstraints($options, $constraints));
     }
 
     /**
