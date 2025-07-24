@@ -23,6 +23,7 @@ use function in_array;
 use function array_map;
 use function get_class;
 use function is_string;
+use function is_object;
 use function array_merge;
 
 /**
@@ -61,7 +62,7 @@ class MapperExtension extends AbstractTypeExtension
         $resolver->setAllowedTypes('remove_value', [Closure::class, 'null']);
         $resolver->setAllowedTypes('compare', ['callable']);
 
-        $resolver->setNormalizer('constraints', fn(Options $options, array $constraints) => $this->normalizeConstraints($options, $constraints));
+        $resolver->setNormalizer('constraints', fn(Options $options, array|object $constraints) => $this->normalizeConstraints($options, $constraints));
     }
 
     /**
@@ -70,9 +71,15 @@ class MapperExtension extends AbstractTypeExtension
      * So if user created callback like ``update_value => fn(string $name)``, this must have NotNull constraint.
      *
      * Otherwise, no validation will be displayed. Class-level annotation constraints don't apply because it could still be null (like factory failure).
+     *
+     * Assert\All can be $constraints parameter; ignore it
      */
-    private function normalizeConstraints(Options $options, array $constraints): array
+    private function normalizeConstraints(Options $options, array|object $constraints): array|object
     {
+        if (is_object($constraints)) {
+            return $constraints;
+        }
+
         /** @var Closure $updater */
         $updater = $options['update_value'];
 
