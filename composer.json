@@ -15,15 +15,15 @@
     "require": {
         "php": "^8.1",
         "ext-json": "*",
-        "symfony/form": "^5.4|^6.0|^7.0",
-        "symfony/framework-bundle": "^5.4|^6.0|^7.0",
-        "symfony/validator": "^5.4|^6.0|^7.0"
+        "symfony/form": "^5.4|^6.0|^7.0|^8.0",
+        "symfony/framework-bundle": "^5.4|^6.0|^7.0|^8.0",
+        "symfony/validator": "^5.4|^6.0|^7.0|^8.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "symfony/phpunit-bridge": "^5.0|^6.0|^7.0",
         "symfony/var-dumper": "*",
-        "vimeo/psalm": "^5",
+        "vimeo/psalm": "^6",
         "psalm/plugin-symfony": "^5"
     },
     "autoload": {
