@@ -13,6 +13,7 @@ use Strictify\FormMapper\Accessor\MapperInterface;
 use Strictify\FormMapper\Accessor\CollectionMapper;
 use Strictify\FormMapper\Accessor\SingleValueMapper;
 use Symfony\Component\Form\Extension\Core\DataMapper\DataMapper;
+use Symfony\Component\Form\Exception\TransformationFailedException;
 
 /**
  * @psalm-import-type O from Types
@@ -71,7 +72,11 @@ class StrictFormMapper implements DataMapperInterface
 
             if ($getter && $config->getMapped() && $form->isSubmitted() && $form->isSynchronized() && !$form->isDisabled()) {
                 $accessor = $this->getAccessor($options, $name);
-                $accessor->update($options, $viewData, $form);
+                try {
+                    $accessor->update($options, $viewData, $form);
+                } catch (\InvalidArgumentException $e) {
+                    throw new TransformationFailedException(invalidMessage: $e->getMessage());
+                }
             } else {
                 $unmappedForms[] = $form;
             }
